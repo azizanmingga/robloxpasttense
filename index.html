@@ -358,13 +358,21 @@
       font-weight: 900;
     }
 
-    /* Mobile / Touch Controls */
+    /* All-Screen Touch Controls (Always Visible for HP, IFP Smartboard & Laptop) */
     #mobile-controls {
-      display: none;
+      display: flex;
       width: 100%;
       justify-content: space-between;
       align-items: flex-end;
-      padding-bottom: 24px;
+      padding-bottom: 22px;
+      pointer-events: none;
+    }
+
+    .left-touch-group {
+      display: flex;
+      align-items: flex-end;
+      gap: 14px;
+      pointer-events: auto;
     }
 
     #joystick-zone {
@@ -372,46 +380,87 @@
       height: 130px;
       position: relative;
       touch-action: none;
+      cursor: grab;
+    }
+
+    #joystick-zone:active {
+      cursor: grabbing;
     }
 
     #joystick-base {
-      width: 110px;
-      height: 110px;
-      background: rgba(255, 255, 255, 0.15);
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      width: 112px;
+      height: 112px;
+      background: rgba(15, 23, 42, 0.55);
+      border: 2px solid rgba(255, 255, 255, 0.4);
       border-radius: 50%;
       position: absolute;
-      bottom: 10px;
-      left: 10px;
-      backdrop-filter: blur(6px);
+      bottom: 8px;
+      left: 8px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
     }
 
     #joystick-handle {
-      width: 48px;
-      height: 48px;
-      background: radial-gradient(circle, #818CF8, #4F46E5);
+      width: 50px;
+      height: 50px;
+      background: radial-gradient(circle, #A5B4FC, #4F46E5);
+      border: 2px solid #fff;
       border-radius: 50%;
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       pointer-events: none;
+    }
+
+    /* D-Pad Buttons for easy tapping on IFP / Laptop / Mobile */
+    .dpad-cluster {
+      display: grid;
+      grid-template-columns: repeat(3, 42px);
+      grid-template-rows: repeat(2, 42px);
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    .dpad-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: none;
+      backdrop-filter: blur(6px);
+      transition: transform 0.1s, background 0.15s;
+    }
+
+    .dpad-btn:active, .dpad-btn.pressed {
+      background: #4F46E5;
+      border-color: #A5B4FC;
+      transform: scale(0.92);
     }
 
     .mobile-buttons {
       display: flex;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
-      margin-right: 8px;
+      margin-right: 6px;
+      pointer-events: auto;
     }
 
     .touch-btn {
-      width: 64px;
-      height: 64px;
+      width: 66px;
+      height: 66px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      border: 2px solid rgba(255, 255, 255, 0.4);
+      background: rgba(15, 23, 42, 0.7);
+      border: 2px solid rgba(255, 255, 255, 0.45);
       backdrop-filter: blur(8px);
       display: flex;
       flex-direction: column;
@@ -421,6 +470,13 @@
       font-weight: 800;
       font-size: 18px;
       cursor: pointer;
+      touch-action: none;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+      transition: transform 0.1s;
+    }
+
+    .touch-btn:active {
+      transform: scale(0.92);
     }
 
     .touch-btn-action {
@@ -433,10 +489,34 @@
       border-color: #FCD34D;
     }
 
+    .touch-btn-cam {
+      width: 52px;
+      height: 52px;
+      font-size: 16px;
+      background: rgba(30, 41, 59, 0.82);
+    }
+
     .touch-btn-sub {
       font-size: 9px;
       font-weight: 800;
       margin-top: -2px;
+    }
+
+    .tap-hint-pill {
+      position: absolute;
+      bottom: 42px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.78);
+      border: 1px solid rgba(255,255,255,0.22);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #E2E8F0;
+      pointer-events: none;
+      white-space: nowrap;
+      backdrop-filter: blur(6px);
     }
 
     .hud-footnote {
@@ -843,9 +923,6 @@
     }
 
     @media (max-width: 820px) {
-      #mobile-controls {
-        display: flex;
-      }
       .players-input-grid {
         grid-template-columns: 1fr;
       }
@@ -853,8 +930,15 @@
         min-width: 210px;
         padding: 8px 10px;
       }
+      .dpad-cluster {
+        display: none;
+      }
       #interact-prompt {
-        bottom: 140px;
+        bottom: 150px;
+      }
+      .tap-hint-pill {
+        bottom: 112px;
+        font-size: 10px;
       }
       .hud-footnote {
         font-size: 9px;
@@ -955,25 +1039,52 @@
 
     <!-- Tombol Interaksi Muncul Saat Dekat Objek -->
     <div id="interact-prompt" onclick="triggerCurrentInteraction()">
-      <span class="key-badge">E</span>
+      <span class="key-badge">SENTUH / E</span>
       <span id="interact-text">Buka Tantangan Past Tense</span>
     </div>
 
-    <!-- Kontrol Layar Sentuh Mobile / IFP -->
+    <!-- Petunjuk Sentuh Tanah / Layar -->
+    <div class="tap-hint-pill">
+      👆 Sentuh/Klik tanah untuk berjalan otomatis &bull; Geser layar untuk putar kamera
+    </div>
+
+    <!-- Kontrol Layar Sentuh Universal (HP, Layar IFP & Laptop) -->
     <div id="mobile-controls">
-      <div id="joystick-zone" class="interactive">
-        <div id="joystick-base">
-          <div id="joystick-handle"></div>
+      <div class="left-touch-group">
+        <!-- Virtual Analog Joystick (Bisa Disentuh Jari & Mouse) -->
+        <div id="joystick-zone" class="interactive" title="Geser untuk berjalan">
+          <div id="joystick-base">
+            <div id="joystick-handle"></div>
+          </div>
+        </div>
+
+        <!-- Tombol Arah D-Pad (Nyaman untuk papan IFP & Klik Mouse) -->
+        <div class="dpad-cluster interactive">
+          <div></div>
+          <button class="dpad-btn" data-dir="forward" title="Maju (W)">▲</button>
+          <div></div>
+          <button class="dpad-btn" data-dir="left" title="Kiri (A)">◀</button>
+          <button class="dpad-btn" data-dir="backward" title="Mundur (S)">▼</button>
+          <button class="dpad-btn" data-dir="right" title="Kanan (D)">▶</button>
         </div>
       </div>
+
       <div class="mobile-buttons interactive">
-        <div class="touch-btn touch-btn-jump" id="touch-jump">
+        <div class="touch-btn touch-btn-cam" id="touch-cam-left" title="Putar Kamera Kiri">
+          <span>↺</span>
+          <span class="touch-btn-sub">KAMERA</span>
+        </div>
+        <div class="touch-btn touch-btn-cam" id="touch-cam-right" title="Putar Kamera Kanan">
+          <span>↻</span>
+          <span class="touch-btn-sub">KAMERA</span>
+        </div>
+        <div class="touch-btn touch-btn-jump" id="touch-jump" title="Lompat">
           <span>▲</span>
           <span class="touch-btn-sub">LOMPAT</span>
         </div>
-        <div class="touch-btn touch-btn-action" id="touch-interact">
-          <span>E</span>
-          <span class="touch-btn-sub">AKSI</span>
+        <div class="touch-btn touch-btn-action" id="touch-interact" title="Interaksi / Buka Pos">
+          <span>⚡</span>
+          <span class="touch-btn-sub">BUKA POS</span>
         </div>
       </div>
     </div>
@@ -1649,7 +1760,7 @@
       audio.playLevelUp();
       updatePartyFloatingLabels();
       saveState();
-      showToast(`Selamat berpetualang ${p1}, ${p2}, ${p3}, & ${p4}! Cari kalimat Past Tense!`, "🚀");
+      showToast(`Selamat berpetualang ${p1}, ${p2}, ${p3}, & ${p4}! Sentuh jalanan atau gunakan joystick!`, "🚀");
     }
 
     function openRegistrationModal() {
@@ -2194,11 +2305,40 @@
     }
 
     /* =====================================================================
-       6. INPUT CONTROLLER
+       6. INPUT CONTROLLER UNIVERSAL (SENTUH LAYAR HP, IFP, MOUSE & KEYBOARD)
        ===================================================================== */
-    const input = { forward: 0, backward: 0, left: 0, right: 0, jump: false, sprint: false };
+    const input = { forward: 0, backward: 0, left: 0, right: 0, jump: false, sprint: false, camLeft: 0, camRight: 0 };
     let isGamePaused = false;
 
+    // Indikator Target Sentuh Tanah (Tap-to-Move Marker 3D)
+    let autoWalkTarget = null;
+    const targetMarkerGroup = new THREE.Group();
+    const targetRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.55, 0.85, 28),
+      new THREE.MeshBasicMaterial({ color: 0x38BDF8, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
+    );
+    targetRing.rotation.x = -Math.PI / 2;
+    targetRing.position.y = 0.08;
+    targetMarkerGroup.add(targetRing);
+
+    const targetCore = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.22, 0.22, 0.15, 16),
+      new THREE.MeshBasicMaterial({ color: 0xFDE047 })
+    );
+    targetCore.position.y = 0.12;
+    targetMarkerGroup.add(targetCore);
+    targetMarkerGroup.visible = false;
+    scene.add(targetMarkerGroup);
+
+    const raycaster = new THREE.Raycaster();
+    const pointerNDC = new THREE.Vector2();
+
+    function cancelAutoWalk() {
+      autoWalkTarget = null;
+      targetMarkerGroup.visible = false;
+    }
+
+    // Keyboard Input (Laptop / PC)
     window.addEventListener('keydown', (e) => {
       if (document.getElementById('registration-overlay').style.display !== 'none') return;
       if (e.code === 'Escape') {
@@ -2209,17 +2349,12 @@
       if (document.querySelector('.modal-overlay.active') || isGamePaused) return;
 
       switch (e.code) {
-        case 'KeyW': case 'ArrowUp': input.forward = 1; break;
-        case 'KeyS': case 'ArrowDown': input.backward = 1; break;
-        case 'KeyA': case 'ArrowLeft': input.left = 1; break;
-        case 'KeyD': case 'ArrowRight': input.right = 1; break;
+        case 'KeyW': case 'ArrowUp': input.forward = 1; cancelAutoWalk(); break;
+        case 'KeyS': case 'ArrowDown': input.backward = 1; cancelAutoWalk(); break;
+        case 'KeyA': case 'ArrowLeft': input.left = 1; cancelAutoWalk(); break;
+        case 'KeyD': case 'ArrowRight': input.right = 1; cancelAutoWalk(); break;
         case 'Space':
-          if (!input.jump && playerState.isGrounded) {
-            input.jump = true;
-            playerState.velocityY = playerState.jumpForce;
-            playerState.isGrounded = false;
-            audio.playJump();
-          }
+          triggerJump();
           break;
         case 'ShiftLeft': case 'ShiftRight': input.sprint = true; break;
         case 'KeyE': triggerCurrentInteraction(); break;
@@ -2237,49 +2372,101 @@
       }
     });
 
+    function triggerJump() {
+      if (playerState.isGrounded && !isGamePaused) {
+        playerState.velocityY = playerState.jumpForce;
+        playerState.isGrounded = false;
+        audio.playJump();
+      }
+    }
+
+    // Kamera Orbit & Deteksi Tap-to-Move di Canvas (Mendukung Jari Sentuh & Mouse)
     let cameraOrbit = { yaw: 0, pitch: 0.38, distance: 15 };
-    let isDragging = false;
-    let prevMousePos = { x: 0, y: 0 };
+    let isCanvasDragging = false;
+    let pointerDownPos = { x: 0, y: 0 };
+    let prevPointerPos = { x: 0, y: 0 };
+    let pointerDownTime = 0;
 
-    window.addEventListener('mousedown', (e) => {
-      if (e.target.tagName !== 'CANVAS') return;
-      isDragging = true;
-      prevMousePos = { x: e.clientX, y: e.clientY };
+    canvas.addEventListener('pointerdown', (e) => {
+      if (isGamePaused || document.querySelector('.modal-overlay.active')) return;
+      isCanvasDragging = true;
+      pointerDownPos = { x: e.clientX, y: e.clientY };
+      prevPointerPos = { x: e.clientX, y: e.clientY };
+      pointerDownTime = performance.now();
     });
 
-    window.addEventListener('mousemove', (e) => {
-      if (!isDragging || isGamePaused) return;
-      const dx = e.clientX - prevMousePos.x;
-      const dy = e.clientY - prevMousePos.y;
-      cameraOrbit.yaw -= dx * 0.006;
-      cameraOrbit.pitch = Math.max(0.1, Math.min(1.2, cameraOrbit.pitch + dy * 0.005));
-      prevMousePos = { x: e.clientX, y: e.clientY };
+    window.addEventListener('pointermove', (e) => {
+      if (!isCanvasDragging || isGamePaused) return;
+      const dx = e.clientX - prevPointerPos.x;
+      const dy = e.clientY - prevPointerPos.y;
+      cameraOrbit.yaw -= dx * 0.0065;
+      cameraOrbit.pitch = Math.max(0.12, Math.min(1.2, cameraOrbit.pitch + dy * 0.0055));
+      prevPointerPos = { x: e.clientX, y: e.clientY };
     });
 
-    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('pointerup', (e) => {
+      if (!isCanvasDragging) return;
+      isCanvasDragging = false;
+
+      // Jika pengguna menyentuh/mengklik singkat (bukan menggeser kamera jauh), jalankan Tap-to-Move!
+      const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+      const elapsed = performance.now() - pointerDownTime;
+      if (moveDist < 14 && elapsed < 450 && e.target === canvas) {
+        handleCanvasTapToMove(e.clientX, e.clientY);
+      }
+    });
+
+    function handleCanvasTapToMove(clientX, clientY) {
+      if (isGamePaused || document.querySelector('.modal-overlay.active')) return;
+      pointerNDC.x = (clientX / window.innerWidth) * 2 - 1;
+      pointerNDC.y = -(clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(pointerNDC, camera);
+
+      const hits = raycaster.intersectObject(groundMesh);
+      if (hits.length > 0) {
+        const pt = hits[0].point;
+        const clampedX = Math.max(-108, Math.min(108, pt.x));
+        const clampedZ = Math.max(-108, Math.min(108, pt.z));
+        autoWalkTarget = new THREE.Vector3(clampedX, 0, clampedZ);
+        targetMarkerGroup.position.set(clampedX, 0, clampedZ);
+        targetMarkerGroup.visible = true;
+      }
+    }
+
     window.addEventListener('wheel', (e) => {
       if (isGamePaused) return;
       cameraOrbit.distance = Math.max(7, Math.min(24, cameraOrbit.distance + e.deltaY * 0.015));
     }, { passive: true });
 
-    // Joystick Layar Sentuh
+    // Virtual Joystick dengan Pointer Events (Berfungsi dengan Jari di HP/IFP maupun Mouse di Laptop)
     const joystickZone = document.getElementById('joystick-zone');
     const joystickHandle = document.getElementById('joystick-handle');
-    let touchStartPos = null;
+    let joyPointerId = null;
+    let joyCenter = { x: 0, y: 0 };
 
-    joystickZone.addEventListener('touchstart', (e) => {
-      if (isGamePaused) return;
-      const rect = joystickZone.getBoundingClientRect();
-      touchStartPos = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-    }, { passive: false });
-
-    joystickZone.addEventListener('touchmove', (e) => {
+    joystickZone.addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      if (!touchStartPos || isGamePaused) return;
-      const t = e.touches[0];
-      const maxDist = 45;
-      let dx = t.clientX - touchStartPos.x;
-      let dy = t.clientY - touchStartPos.y;
+      e.stopPropagation();
+      if (isGamePaused) return;
+      cancelAutoWalk();
+      joyPointerId = e.pointerId;
+      joystickZone.setPointerCapture(e.pointerId);
+      const rect = joystickZone.getBoundingClientRect();
+      joyCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      updateJoystickFromPoint(e.clientX, e.clientY);
+    });
+
+    joystickZone.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== joyPointerId || isGamePaused) return;
+      e.preventDefault();
+      e.stopPropagation();
+      updateJoystickFromPoint(e.clientX, e.clientY);
+    });
+
+    function updateJoystickFromPoint(clientX, clientY) {
+      const maxDist = 44;
+      let dx = clientX - joyCenter.x;
+      let dy = clientY - joyCenter.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist > maxDist) {
         dx = (dx / dist) * maxDist;
@@ -2288,32 +2475,69 @@
       joystickHandle.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
       const nx = dx / maxDist;
       const ny = dy / maxDist;
-      input.left = nx < -0.2 ? -nx : 0;
-      input.right = nx > 0.2 ? nx : 0;
-      input.forward = ny < -0.2 ? -ny : 0;
-      input.backward = ny > 0.2 ? ny : 0;
-    }, { passive: false });
+      input.left = nx < -0.18 ? -nx : 0;
+      input.right = nx > 0.18 ? nx : 0;
+      input.forward = ny < -0.18 ? -ny : 0;
+      input.backward = ny > 0.18 ? ny : 0;
+    }
 
-    function resetJoystick() {
-      touchStartPos = null;
+    function resetJoystick(e) {
+      if (e && e.pointerId !== joyPointerId) return;
+      joyPointerId = null;
       joystickHandle.style.transform = `translate(-50%, -50%)`;
       input.forward = 0; input.backward = 0; input.left = 0; input.right = 0;
     }
-    joystickZone.addEventListener('touchend', resetJoystick);
-    joystickZone.addEventListener('touchcancel', resetJoystick);
 
-    document.getElementById('touch-jump').addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (playerState.isGrounded && !isGamePaused) {
-        playerState.velocityY = playerState.jumpForce;
-        playerState.isGrounded = false;
-        audio.playJump();
-      }
+    joystickZone.addEventListener('pointerup', resetJoystick);
+    joystickZone.addEventListener('pointercancel', resetJoystick);
+
+    // Tombol Arah D-Pad di Layar (Sentuh / Klik Tahan)
+    document.querySelectorAll('.dpad-btn').forEach(btn => {
+      const dir = btn.dataset.dir;
+      const startDir = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cancelAutoWalk();
+        btn.classList.add('pressed');
+        input[dir] = 1;
+      };
+      const endDir = (e) => {
+        e.preventDefault();
+        btn.classList.remove('pressed');
+        input[dir] = 0;
+      };
+      btn.addEventListener('pointerdown', startDir);
+      btn.addEventListener('pointerup', endDir);
+      btn.addEventListener('pointerleave', endDir);
+      btn.addEventListener('pointercancel', endDir);
     });
 
-    document.getElementById('touch-interact').addEventListener('touchstart', (e) => {
+    // Tombol Kamera, Lompat & Buka Pos (Bekerja untuk Sentuhan Jari & Klik Mouse)
+    const bindHoldBtn = (elId, propName) => {
+      const el = document.getElementById(elId);
+      el.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); input[propName] = 1; });
+      const stopHold = (e) => { e.preventDefault(); input[propName] = 0; };
+      el.addEventListener('pointerup', stopHold);
+      el.addEventListener('pointerleave', stopHold);
+      el.addEventListener('pointercancel', stopHold);
+    };
+    bindHoldBtn('touch-cam-left', 'camLeft');
+    bindHoldBtn('touch-cam-right', 'camRight');
+
+    document.getElementById('touch-jump').addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      triggerCurrentInteraction();
+      e.stopPropagation();
+      triggerJump();
+    });
+
+    document.getElementById('touch-interact').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (nearestInteraction) {
+        triggerCurrentInteraction();
+      } else {
+        showToast("Dekati Pos Gedung atau NPC terlebih dahulu untuk berinteraksi!", "💡");
+      }
     });
 
     document.getElementById('btn-pause').onclick = togglePause;
@@ -2339,16 +2563,37 @@
     function updatePlayerParty(delta) {
       if (isGamePaused) return;
 
+      // Rotasi kamera dari tombol layar jika ditekan
+      if (input.camLeft) cameraOrbit.yaw += 1.8 * delta;
+      if (input.camRight) cameraOrbit.yaw -= 1.8 * delta;
+
       let moveZ = (input.backward - input.forward);
       let moveX = (input.right - input.left);
       const moveDir = new THREE.Vector3(moveX, 0, moveZ);
-      const isMoving = moveDir.length() > 0.1;
+      let isMoving = moveDir.length() > 0.1;
 
       if (isMoving) {
+        cancelAutoWalk();
         moveDir.normalize();
         moveDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraOrbit.yaw);
+      } else if (autoWalkTarget) {
+        // Jalan otomatis menuju titik yang disentuh di layar (Tap-to-Move)
+        const toTarget = new THREE.Vector3(
+          autoWalkTarget.x - playerGroup.position.x,
+          0,
+          autoWalkTarget.z - playerGroup.position.z
+        );
+        if (toTarget.length() > 0.65) {
+          toTarget.normalize();
+          moveDir.copy(toTarget);
+          isMoving = true;
+        } else {
+          cancelAutoWalk();
+        }
+      }
 
-        const speed = input.sprint ? 14 : 9.2;
+      if (isMoving) {
+        const speed = input.sprint ? 14 : 9.5;
         playerGroup.position.x += moveDir.x * speed * delta;
         playerGroup.position.z += moveDir.z * speed * delta;
 
@@ -2899,6 +3144,11 @@
       updatePlayerParty(delta);
       updateCamera();
       checkProximity();
+
+      if (targetMarkerGroup.visible) {
+        targetRing.rotation.z = time * 3;
+        targetCore.position.y = 0.18 + Math.sin(time * 6) * 0.08;
+      }
 
       animatedCollectibles.forEach((item, idx) => {
         item.mesh.rotation.y += 2.0 * delta;
