@@ -1,0 +1,2941 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Roblox Cerdas 3D - Petualangan Past Tense (4 Pemain)</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Three.js CDN (r128) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-dark: #3730A3;
+      --secondary: #06B6D4;
+      --accent: #F59E0B;
+      --success: #10B981;
+      --danger: #EF4444;
+      --bg-dark: #0f172a;
+      --hud-glass: rgba(15, 23, 42, 0.86);
+      --hud-border: rgba(255, 255, 255, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0b0f19;
+      color: #fff;
+    }
+
+    #game-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      display: block;
+    }
+
+    /* ================= START REGISTRATION OVERLAY ================= */
+    #registration-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(30, 27, 75, 0.92), rgba(9, 13, 28, 0.98));
+      backdrop-filter: blur(14px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .reg-card {
+      background: #1e293b;
+      border: 2px solid rgba(129, 140, 248, 0.4);
+      border-radius: 26px;
+      width: 100%;
+      max-width: 620px;
+      padding: 28px 32px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+      text-align: center;
+    }
+
+    .reg-badge {
+      display: inline-block;
+      background: linear-gradient(90deg, #F59E0B, #D97706);
+      color: #fff;
+      font-weight: 900;
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .reg-title {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      background: linear-gradient(90deg, #fff, #a5b4fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .reg-desc {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    .players-input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .player-input-box {
+      background: #0f172a;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 12px 14px;
+      transition: border-color 0.2s;
+    }
+
+    .player-input-box:focus-within {
+      border-color: #6366f1;
+    }
+
+    .player-input-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .player-input-field {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      outline: none;
+    }
+
+    /* ================= HUD ================= */
+    #hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    .glass-card {
+      background: var(--hud-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--hud-border);
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      width: 100%;
+    }
+
+    /* 4-Player Scoreboard HUD */
+    .party-scoreboard {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 16px;
+      min-width: 280px;
+    }
+
+    .turn-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, #4F46E5, #7C3AED);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .party-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .party-member-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .party-member-card.active-turn {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: #FBBF24;
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+    }
+
+    .member-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .member-avatar-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .member-name {
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 85px;
+    }
+
+    .member-score {
+      font-size: 13px;
+      font-weight: 900;
+      color: #FBBF24;
+    }
+
+    .top-right-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .hud-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .scroll-counter-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      font-weight: 800;
+      color: #38BDF8;
+      font-size: 14px;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--hud-border);
+      background: var(--hud-glass);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    #radar-container {
+      width: 106px;
+      height: 106px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      background: rgba(15, 23, 42, 0.88);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+    }
+
+    #radar-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Interaction Prompt */
+    #interact-prompt {
+      position: absolute;
+      bottom: 110px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 12px 24px;
+      border-radius: 30px;
+      background: rgba(79, 70, 229, 0.95);
+      border: 2px solid #A5B4FC;
+      color: #fff;
+      font-weight: 800;
+      font-size: 15px;
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.6);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      pointer-events: auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 20;
+    }
+
+    #interact-prompt.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .key-badge {
+      background: #fff;
+      color: var(--primary-dark);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    /* Mobile / Touch Controls */
+    #mobile-controls {
+      display: none;
+      width: 100%;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-bottom: 24px;
+    }
+
+    #joystick-zone {
+      width: 130px;
+      height: 130px;
+      position: relative;
+      touch-action: none;
+    }
+
+    #joystick-base {
+      width: 110px;
+      height: 110px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      backdrop-filter: blur(6px);
+    }
+
+    #joystick-handle {
+      width: 48px;
+      height: 48px;
+      background: radial-gradient(circle, #818CF8, #4F46E5);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      pointer-events: none;
+    }
+
+    .mobile-buttons {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-right: 8px;
+    }
+
+    .touch-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .touch-btn-action {
+      background: linear-gradient(135deg, #10B981, #059669);
+      border-color: #6EE7B7;
+    }
+
+    .touch-btn-jump {
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      border-color: #FCD34D;
+    }
+
+    .touch-btn-sub {
+      font-size: 9px;
+      font-weight: 800;
+      margin-top: -2px;
+    }
+
+    .hud-footnote {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.65);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      pointer-events: auto;
+      white-space: nowrap;
+    }
+
+    .hud-footnote span {
+      color: #FBBF24;
+      font-weight: 800;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 10, 25, 0.84);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-window {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 22px;
+      width: 100%;
+      max-width: 660px;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    .modal-overlay.active .modal-window {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .modal-icon {
+      font-size: 28px;
+    }
+
+    .modal-title {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .modal-subtitle {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .btn-close {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #cbd5e1;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 22px 24px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      background: #0f172a;
+      padding: 6px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-weight: 800;
+      font-size: 13px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* Active Player Turn Banner in Quiz */
+    .quiz-turn-banner {
+      background: linear-gradient(90deg, #1E1B4B, #312E81);
+      border: 2px solid #818CF8;
+      padding: 10px 16px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .quiz-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 10px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-weight: 800;
+    }
+
+    .timer-badge {
+      background: #334155;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+
+    .timer-badge.warning {
+      background: #DC2626;
+      animation: pulse 1s infinite;
+    }
+
+    .question-box {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.5;
+      margin-bottom: 18px;
+      color: #f8fafc;
+      background: rgba(15, 23, 42, 0.5);
+      padding: 14px;
+      border-radius: 12px;
+      border-left: 4px solid #F59E0B;
+    }
+
+    .answers-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .answer-btn {
+      background: #334155;
+      border: 2px solid transparent;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: #f1f5f9;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .answer-btn:hover:not(:disabled) {
+      border-color: #6366f1;
+      background: #3e4c63;
+      transform: translateX(4px);
+    }
+
+    .answer-btn.correct {
+      background: #065F46 !important;
+      border-color: #10B981 !important;
+      color: #A7F3D0;
+    }
+
+    .answer-btn.wrong {
+      background: #881337 !important;
+      border-color: #F43F5E !important;
+      color: #FECDD3;
+    }
+
+    .explanation-card {
+      background: rgba(30, 41, 59, 0.95);
+      border-left: 4px solid var(--secondary);
+      padding: 14px 18px;
+      border-radius: 0 12px 12px 0;
+      margin-top: 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #4F46E5, #6366F1);
+      color: #fff;
+      border: none;
+      padding: 13px 22px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+      transition: transform 0.15s;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Podium & Leaderboard Styles */
+    .podium-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 14px;
+      margin: 24px 0 28px 0;
+      height: 180px;
+    }
+
+    .podium-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 110px;
+    }
+
+    .podium-name {
+      font-weight: 900;
+      font-size: 13px;
+      margin-bottom: 4px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 105px;
+    }
+
+    .podium-score {
+      font-size: 12px;
+      color: #FBBF24;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .podium-bar {
+      width: 100%;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 900;
+      box-shadow: 0 -6px 20px rgba(0,0,0,0.3);
+    }
+
+    .rank-list-item {
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* Wardrobe */
+    .wardrobe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .wardrobe-item {
+      background: #0f172a;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .wardrobe-item.active {
+      border-color: #10B981;
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .wardrobe-preview {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .wardrobe-label {
+      font-weight: 800;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      color: #cbd5e1;
+    }
+
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+
+    #toast-banner {
+      position: absolute;
+      top: 85px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-30px);
+      background: rgba(16, 185, 129, 0.95);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-weight: 800;
+      font-size: 13px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #toast-banner.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    @media (max-width: 820px) {
+      #mobile-controls {
+        display: flex;
+      }
+      .players-input-grid {
+        grid-template-columns: 1fr;
+      }
+      .party-scoreboard {
+        min-width: 210px;
+        padding: 8px 10px;
+      }
+      #interact-prompt {
+        bottom: 140px;
+      }
+      .hud-footnote {
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LAYAR PENDAFTARAN 4 PEMAIN SEBELUM MEMULAI -->
+  <div id="registration-overlay">
+    <div class="reg-card">
+      <div class="reg-badge">✨ Multiplayer Party Adventure (4 Pemain)</div>
+      <h1 class="reg-title">Petualangan Past Tense 3D</h1>
+      <p class="reg-desc">
+        Masukkan nama <strong>4 Petualang</strong>! Kalian akan berpetualang bersama di dunia 3D mencari gulungan kalimat <em>Past Tense</em>, memperbaiki kalimat yang salah, dan menemukan <em>Verb 2</em> yang tepat. Pemain dengan <strong>skor tertinggi adalah Juaranya! 🏆</strong>
+      </p>
+
+      <div class="players-input-grid">
+        <div class="player-input-box">
+          <div class="player-input-label">
+            <span class="color-dot" style="background: #EF4444;"></span>
+            <span style="color:#FCA5A5;">Petualang 1 (Ketua Regu)</span>
+          </div>
+          <input type="text" class="player-input-field" id="input-p1" value="Budi" placeholder="Nama Pemain 1" maxlength="16">
+        </div>
+
+        <div class="player-input-box">
+          <div class="player-input-label">
+            <span class="color-dot" style="background: #3B82F6;"></span>
+            <span style="color:#93C5FD;">Petualang 2</span>
+          </div>
+          <input type="text" class="player-input-field" id="input-p2" value="Siti" placeholder="Nama Pemain 2" maxlength="16">
+        </div>
+
+        <div class="player-input-box">
+          <div class="player-input-label">
+            <span class="color-dot" style="background: #10B981;"></span>
+            <span style="color:#6EE7B7;">Petualang 3</span>
+          </div>
+          <input type="text" class="player-input-field" id="input-p3" value="Andi" placeholder="Nama Pemain 3" maxlength="16">
+        </div>
+
+        <div class="player-input-box">
+          <div class="player-input-label">
+            <span class="color-dot" style="background: #F59E0B;"></span>
+            <span style="color:#FCD34D;">Petualang 4</span>
+          </div>
+          <input type="text" class="player-input-field" id="input-p4" value="Lani" placeholder="Nama Pemain 4" maxlength="16">
+        </div>
+      </div>
+
+      <button class="primary-btn" onclick="startPartyAdventure()">🚀 Mulai Petualangan 4 Sekawan!</button>
+    </div>
+  </div>
+
+  <!-- WebGL Canvas 3D -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Notifikasi Toast -->
+  <div id="toast-banner">
+    <span id="toast-icon">✨</span>
+    <span id="toast-msg">Pemberitahuan</span>
+  </div>
+
+  <!-- HUD Layer -->
+  <div id="hud">
+    <div class="hud-top">
+      <!-- Papan Skor 4 Pemain & Giliran Aktif -->
+      <div class="glass-card party-scoreboard interactive">
+        <div class="turn-banner">
+          <span>🎯 Giliran Menjawab: <strong id="hud-active-player" style="color:#FDE68A;">Budi</strong></span>
+          <span style="font-size:10px; opacity:0.85;">(Klik nama tuk ganti)</span>
+        </div>
+        <div class="party-grid" id="hud-party-grid">
+          <!-- Dirender dinamis -->
+        </div>
+      </div>
+
+      <div class="top-right-group interactive">
+        <div class="hud-actions">
+          <div class="glass-card scroll-counter-badge" title="Gulungan Kalimat Past Tense Ditemukan">
+            <span>📜 Gulungan:</span>
+            <span id="hud-scrolls">0 / 12</span>
+          </div>
+          <button class="icon-btn" id="btn-leaderboard" title="Podium Juara & Klasemen Skor" style="background: linear-gradient(135deg, #F59E0B, #D97706); border-color:#FDE68A;">🏆</button>
+          <button class="icon-btn" id="btn-wardrobe" title="Lemari Gaya Seragam">👕</button>
+          <button class="icon-btn" id="btn-teacher" title="Mode Guru / Tambah Soal Past Tense">👨‍🏫</button>
+          <button class="icon-btn" id="btn-register-again" title="Ganti Nama 4 Pemain" onclick="openRegistrationModal()">👥</button>
+          <button class="icon-btn" id="btn-pause" title="Jeda Permainan">⏸️</button>
+        </div>
+        <!-- 2D Minimap Radar -->
+        <div id="radar-container">
+          <canvas id="radar-canvas" width="106" height="106"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tombol Interaksi Muncul Saat Dekat Objek -->
+    <div id="interact-prompt" onclick="triggerCurrentInteraction()">
+      <span class="key-badge">E</span>
+      <span id="interact-text">Buka Tantangan Past Tense</span>
+    </div>
+
+    <!-- Kontrol Layar Sentuh Mobile / IFP -->
+    <div id="mobile-controls">
+      <div id="joystick-zone" class="interactive">
+        <div id="joystick-base">
+          <div id="joystick-handle"></div>
+        </div>
+      </div>
+      <div class="mobile-buttons interactive">
+        <div class="touch-btn touch-btn-jump" id="touch-jump">
+          <span>▲</span>
+          <span class="touch-btn-sub">LOMPAT</span>
+        </div>
+        <div class="touch-btn touch-btn-action" id="touch-interact">
+          <span>E</span>
+          <span class="touch-btn-sub">AKSI</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footnote -->
+    <div class="hud-footnote">
+      Roblox Cerdas 3D: Past Tense Edition &bull; Dikembangkan oleh <span>Mingga Ria Hadi</span> &bull; 4-Player Adventure
+    </div>
+  </div>
+
+  <!-- MODAL GEDUNG POS PAST TENSE & KUIS -->
+  <div class="modal-overlay" id="modal-building">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon" id="building-modal-icon">🏛️</div>
+          <div>
+            <div class="modal-title" id="building-modal-title">Pos Past Tense</div>
+            <div class="modal-subtitle">Tantangan Berburu Kalimat & Verb 2 Bahasa Inggris</div>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-building')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="tab-bar">
+          <button class="tab-btn active" id="tab-btn-materi" onclick="switchBuildingTab('materi')">📖 Panduan Materi</button>
+          <button class="tab-btn" id="tab-btn-kuis" onclick="switchBuildingTab('kuis')">⚔️ Tantangan 4 Pemain</button>
+        </div>
+
+        <!-- Konten Tab 1: Materi -->
+        <div id="tab-content-materi">
+          <div style="background: rgba(15,23,42,0.7); padding: 18px; border-radius: 12px; margin-bottom: 18px; line-height: 1.65; font-size: 14px;" id="materi-text">
+            Materi Past Tense akan dimuat di sini...
+          </div>
+          <button class="primary-btn" onclick="startBuildingQuiz()">Mulai Tantangan Giliran 4 Pemain!</button>
+        </div>
+
+        <!-- Konten Tab 2: Kuis -->
+        <div id="tab-content-kuis" style="display: none;">
+          <div class="quiz-turn-banner" id="quiz-turn-indicator">
+            <span>🎮 Giliran Menjawab: <strong id="quiz-current-player-name" style="color:#FBBF24;">Pemain 1</strong></span>
+            <span id="quiz-question-counter" style="font-size:12px; color:#A5B4FC;">Soal 1 / 4</span>
+          </div>
+
+          <div class="quiz-stats">
+            <div style="color:#34D399; font-size:13px;">Poin Benar: +25 Poin</div>
+            <div class="timer-badge" id="quiz-timer">⏱️ 30s</div>
+          </div>
+
+          <div class="question-box" id="quiz-question">Pertanyaan kuis akan dimuat di sini...</div>
+          <div class="answers-grid" id="quiz-options"></div>
+          
+          <div class="explanation-card" id="quiz-explanation">
+            <strong>💡 Pembahasan Past Tense:</strong>
+            <p id="quiz-explanation-text" style="margin-top: 4px;"></p>
+          </div>
+          
+          <button class="primary-btn" id="quiz-next-btn" style="margin-top: 14px; display: none;" onclick="nextQuestion()">Lanjut ke Giliran Pemain Berikutnya ➔</button>
+          
+          <!-- Layar Hasil Kuis Pos -->
+          <div id="quiz-summary" style="display: none; text-align: center; padding: 16px 0;">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 6px;">Tantangan Pos Selesai! 🎉</h2>
+            <p style="font-size: 14px; color: #94a3b8; margin-bottom: 18px;">Skor telah ditambahkan ke masing-masing petualang. Mari cek posisi juara saat ini!</p>
+            <div style="display: flex; gap: 12px;">
+              <button class="primary-btn" style="background: #F59E0B;" onclick="closeModal('modal-building'); openLeaderboardModal();">🏆 Lihat Podium Juara</button>
+              <button class="primary-btn" onclick="closeModal('modal-building')">Lanjut Berpetualang</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TANTANGAN GULUNGAN KALIMAT DI JALAN (SCROLL CHALLENGE) -->
+  <div class="modal-overlay" id="modal-scroll">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon">📜</div>
+          <div>
+            <div class="modal-title">Gulungan Kalimat Misterius Ditemukan!</div>
+            <div class="modal-subtitle">Jawab dengan benar untuk meraih +30 Poin Petualang</div>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-scroll')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="quiz-turn-banner">
+          <span>🎯 Penemu Gulungan (Giliran): <strong id="scroll-player-name" style="color:#FDE68A;">Pemain 1</strong></span>
+          <span style="color:#34D399;">Hadiah: +30 Poin</span>
+        </div>
+        <div class="question-box" id="scroll-question">Pertanyaan gulungan...</div>
+        <div class="answers-grid" id="scroll-options"></div>
+        <div class="explanation-card" id="scroll-explanation">
+          <strong>💡 Penjelasan:</strong>
+          <p id="scroll-explanation-text" style="margin-top:4px;"></p>
+        </div>
+        <button class="primary-btn" id="scroll-close-btn" style="margin-top:14px; display:none;" onclick="closeModal('modal-scroll')">Simpan Poin & Lanjutkan Petualangan ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PODIUM JUARA & PAPAN SKOR (LEADERBOARD) -->
+  <div class="modal-overlay" id="modal-leaderboard">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon">🏆</div>
+          <div>
+            <div class="modal-title">Podium Juara Petualangan Past Tense</div>
+            <div class="modal-subtitle">Nilai Terbesar adalah Sang Juara Utama!</div>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-leaderboard')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="champion-banner" style="text-align:center; background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(217,119,6,0.35)); border: 2px solid #FBBF24; border-radius: 16px; padding: 14px; margin-bottom: 16px;">
+          <div style="font-size: 12px; font-weight: 900; color: #FDE68A; text-transform: uppercase; letter-spacing: 1px;">👑 Pemimpin Skor Tertinggi Saat Ini</div>
+          <div id="champion-name" style="font-size: 26px; font-weight: 900; color: #fff; margin-top: 2px;">Budi (0 Poin)</div>
+        </div>
+
+        <!-- Podium Visual -->
+        <div class="podium-container" id="podium-box"></div>
+
+        <!-- Daftar Lengkap 4 Pemain -->
+        <h4 style="margin-bottom: 10px; font-size: 13px; color: #94a3b8; font-weight: 800;">Klasemen Lengkap 4 Petualang:</h4>
+        <div id="leaderboard-list"></div>
+
+        <div style="display:flex; gap:10px; margin-top: 18px;">
+          <button class="primary-btn" style="background:#10B981;" onclick="closeModal('modal-leaderboard')">Lanjut Cari Poin</button>
+          <button class="primary-btn" style="background:#EF4444;" onclick="resetAllScores()">🔄 Reset Skor ke 0</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL LEMARI GAYA (WARDROBE) -->
+  <div class="modal-overlay" id="modal-wardrobe">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon">👕</div>
+          <div>
+            <div class="modal-title">Lemari Gaya Ketua Regu</div>
+            <div class="modal-subtitle">Kustomisasi Seragam & Aksesoris Petualang</div>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-wardrobe')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h4 style="margin-bottom: 10px; font-weight: 800; color: #cbd5e1; font-size: 13px;">Pilihan Seragam Sekolah & Budaya:</h4>
+        <div class="wardrobe-grid" id="outfit-options"></div>
+
+        <h4 style="margin: 16px 0 10px 0; font-weight: 800; color: #cbd5e1; font-size: 13px;">Pilihan Aksesoris:</h4>
+        <div class="wardrobe-grid" id="accessory-options"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MODE GURU -->
+  <div class="modal-overlay" id="modal-teacher">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon">👨‍🏫</div>
+          <div>
+            <div class="modal-title">Mode Guru - Bank Soal Past Tense</div>
+            <div class="modal-subtitle">Tambahkan Soal Kalimat Past Tense, Perbaikan Kalimat, atau Verb 2</div>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-teacher')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Pilih Pos Tantangan Past Tense:</label>
+          <select class="form-select" id="teacher-mapel">
+            <option value="cari_kalimat">Pos 1: Mencari Kalimat Past Tense</option>
+            <option value="perbaiki_kalimat">Pos 2: Memperbaiki Kalimat Salah</option>
+            <option value="regular_verb">Pos 3: Menemukan Regular Verb (-ed)</option>
+            <option value="irregular_verb">Pos 4: Menemukan Irregular Verb (Verb 2)</option>
+            <option value="negatif_tanya">Pos 5: Kalimat Negatif & Tanya (Did / Didn't)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Pertanyaan Soal Baru:</label>
+          <input type="text" class="form-input" id="teacher-q" placeholder="Contoh: Perbaiki kalimat ini: 'She go to Bali last week.'">
+        </div>
+        <div class="form-group">
+          <label>Pilihan Jawaban (A, B, C, D):</label>
+          <input type="text" class="form-input" id="teacher-opt0" placeholder="Pilihan A" style="margin-bottom:6px;">
+          <input type="text" class="form-input" id="teacher-opt1" placeholder="Pilihan B" style="margin-bottom:6px;">
+          <input type="text" class="form-input" id="teacher-opt2" placeholder="Pilihan C" style="margin-bottom:6px;">
+          <input type="text" class="form-input" id="teacher-opt3" placeholder="Pilihan D">
+        </div>
+        <div class="form-group">
+          <label>Kunci Jawaban Benar:</label>
+          <select class="form-select" id="teacher-correct">
+            <option value="0">Pilihan A</option>
+            <option value="1">Pilihan B</option>
+            <option value="2">Pilihan C</option>
+            <option value="3">Pilihan D</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Pembahasan Edukatif:</label>
+          <textarea class="form-textarea" rows="2" id="teacher-explain" placeholder="Tuliskan penjelasan rumus Past Tense..."></textarea>
+        </div>
+        <button class="primary-btn" onclick="saveCustomQuestion()">Simpan Soal ke Pos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOGIKA UTAMA -->
+  <script>
+    /* =====================================================================
+       1. SYNTHESIZER AUDIO PROSEDURAL
+       ===================================================================== */
+    class ProceduralAudio {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playJump() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(480, this.ctx.currentTime + 0.14);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.14);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.15);
+      }
+      playCoin() {
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(987.77, now);
+        osc.frequency.setValueAtTime(1318.51, now + 0.08);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
+        osc.start(now);
+        osc.stop(now + 0.33);
+      }
+      playCorrect() {
+        this.init();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          const t = this.ctx.currentTime + (idx * 0.06);
+          gain.gain.setValueAtTime(0.18, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+          osc.start(t);
+          osc.stop(t + 0.2);
+        });
+      }
+      playWrong() {
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.22);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.26);
+        osc.start(now);
+        osc.stop(now + 0.27);
+      }
+      playLevelUp() {
+        this.init();
+        const chord = [440, 554.37, 659.25, 880];
+        chord.forEach(freq => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.55);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.56);
+        });
+      }
+    }
+    const audio = new ProceduralAudio();
+
+    /* =====================================================================
+       2. KURIKULUM SPESIAL SIMPLE PAST TENSE (5 POS + GULUNGAN DUNIA)
+       ===================================================================== */
+    const defaultCurriculum = {
+      cari_kalimat: {
+        title: "Pos 1: Mencari Kalimat Past Tense",
+        icon: "🔎",
+        color: 0xEF4444,
+        materi: "Simple Past Tense digunakan untuk menceritakan kejadian yang sudah selesai di masa lampau. Ciri utamanya menggunakan Verb 2 (kata kerja kedua) atau 'was/were', serta keterangan waktu seperti: yesterday (kemarin), last night (tadi malam), two days ago (dua hari lalu), dan this morning.",
+        quizzes: [
+          {
+            q: "Manakah di bawah ini yang merupakan kalimat Simple Past Tense yang benar?",
+            options: [
+              "She plays badminton every Sunday.",
+              "They visited Borobudur Temple last holiday.",
+              "I am studying English right now.",
+              "We will go to Surabaya tomorrow."
+            ],
+            answer: 1,
+            explain: "'They visited Borobudur Temple last holiday' menggunakan Verb 2 (visited) dan keterangan waktu lampau (last holiday)."
+          },
+          {
+            q: "Temukan kalimat yang menceritakan kejadian di masa lampau (Past Tense)!",
+            options: [
+              "My mother cooked fried rice this morning.",
+              "My mother cooks fried rice every day.",
+              "My mother is cooking fried rice now.",
+              "My mother will cook fried rice tonight."
+            ],
+            answer: 0,
+            explain: "'Cooked' adalah Verb 2 dari cook, menunjukkan aktivitas memasak sudah selesai tadi pagi."
+          },
+          {
+            q: "Manakah kalimat Past Tense menggunakan 'To Be' (was/were) yang tepat?",
+            options: [
+              "Andi and Budi was happy yesterday.",
+              "She were at the library last night.",
+              "I was very tired after the football match yesterday.",
+              "They are in the classroom two hours ago."
+            ],
+            answer: 2,
+            explain: "Subjek 'I' berpasangan dengan 'was' untuk menyatakan kondisi di masa lampau (yesterday)."
+          },
+          {
+            q: "Pilihlah kalimat yang 100% menggunakan struktur Simple Past Tense!",
+            options: [
+              "The cat sleeps on the sofa.",
+              "We bought some storybooks at the book fair last week.",
+              "He is riding his new bicycle.",
+              "Lani drinks a glass of milk every morning."
+            ],
+            answer: 1,
+            explain: "'Bought' adalah bentuk Past Tense (Verb 2) dari 'buy', ditambah penanda 'last week'."
+          }
+        ]
+      },
+      perbaiki_kalimat: {
+        title: "Pos 2: Memperbaiki Kalimat Salah",
+        icon: "🛠️",
+        color: 0x3B82F6,
+        materi: "Banyak petualang keliru menulis kalimat masa lampau karena masih memakai Verb 1 atau salah menaruh 'was/were'. Ingat rumus positif: Subject + Verb 2! Jika ada kata 'yesterday / last week / ago', ubahlah kata kerjanya menjadi Verb 2!",
+        quizzes: [
+          {
+            q: "Perbaiki kalimat yang salah ini: 'Budi go to the zoo with his family yesterday.'",
+            options: [
+              "Budi goes to the zoo with his family yesterday.",
+              "Budi went to the zoo with his family yesterday.",
+              "Budi going to the zoo with his family yesterday.",
+              "Budi is went to the zoo with his family yesterday."
+            ],
+            answer: 1,
+            explain: "Kata kerja 'go' harus diubah menjadi Verb 2 yaitu 'went' karena kejadiannya kemarin (yesterday)."
+          },
+          {
+            q: "Perbaiki kalimat ini: 'We was very excited at the school camp last month.'",
+            options: [
+              "We is very excited at the school camp last month.",
+              "We are very excited at the school camp last month.",
+              "We were very excited at the school camp last month.",
+              "We been very excited at the school camp last month."
+            ],
+            answer: 2,
+            explain: "Untuk subjek jamak (We, They, You), To Be bentuk lampau yang benar adalah 'were', bukan 'was'."
+          },
+          {
+            q: "Perbaiki kalimat ini: 'Siti studyed math hard last night.'",
+            options: [
+              "Siti studied math hard last night.",
+              "Siti studies math hard last night.",
+              "Siti study math hard last night.",
+              "Siti studying math hard last night."
+            ],
+            answer: 0,
+            explain: "Kata kerja berakhiran konsonan + 'y' (study) ketika diubah ke Past Tense huruf 'y' berubah menjadi 'i' + ed -> 'studied'."
+          },
+          {
+            q: "Perbaiki kalimat ini: 'My father buyed a new helmet two days ago.'",
+            options: [
+              "My father buys a new helmet two days ago.",
+              "My father bought a new helmet two days ago.",
+              "My father buying a new helmet two days ago.",
+              "My father is bought a new helmet two days ago."
+            ],
+            answer: 1,
+            explain: "'Buy' adalah Irregular Verb (kata kerja tak beraturan), sehingga Verb 2-nya adalah 'bought', bukan 'buyed'."
+          }
+        ]
+      },
+      regular_verb: {
+        title: "Pos 3: Menemukan Regular Verb (-ed)",
+        icon: "📘",
+        color: 0xF59E0B,
+        materi: "Regular Verbs adalah kata kerja beraturan yang bentuk masa lampaunya (Verb 2) cukup ditambahkan akhiran '-ed' atau '-d'. Contoh: walk -> walked, play -> played,smile -> smiled, cry -> cried, stop -> stopped.",
+        quizzes: [
+          {
+            q: "Apakah bentuk Past Tense (Verb 2) yang benar dari kata 'WATCH' (menonton)?",
+            options: ["Watchs", "Watched", "Watching", "Wotch"],
+            answer: 1,
+            explain: "'Watch' adalah regular verb, cukup ditambahkan '-ed' menjadi 'watched'."
+          },
+          {
+            q: "Lengkapi kalimat ini dengan Regular Verb yang benar: 'Lani _______ her bedroom yesterday afternoon.'",
+            options: ["clean", "cleans", "cleaned", "cleaning"],
+            answer: 2,
+            explain: "Clean + ed = 'cleaned' untuk menyatakan kegiatan membersihkan kamar kemarin sore."
+          },
+          {
+            q: "Manakah penulisan Verb 2 yang TEPAT untuk kata kerja 'STOP'?",
+            options: ["Stoped", "Stopped", "Stopied", "Stops"],
+            answer: 1,
+            explain: "Kata kerja satu suku kata berpola Konsonan-Vokal-Konsonan (s-t-o-p) huruf terakhirnya digandakan sebelum ditambah -ed menjadi 'stopped'."
+          },
+          {
+            q: "Manakah kelompok kata di bawah ini yang SEMUANYA adalah Regular Verb (Verb 2)?",
+            options: [
+              "Played, Walked, Helped, Visited",
+              "Went, Ate, Drank, Saw",
+              "Cooked, Bought, Jumped, Ran",
+              "Talked, Slept, Opened, Wrote"
+            ],
+            answer: 0,
+            explain: "Played, Walked, Helped, dan Visited semuanya berakhiran -ed (Regular Verbs)."
+          }
+        ]
+      },
+      irregular_verb: {
+        title: "Pos 4: Menemukan Irregular Verb",
+        icon: "⚡",
+        color: 0x8B5CF6,
+        materi: "Irregular Verbs adalah kata kerja tidak beraturan yang berubah bentuknya pada masa lampau (tidak ditambah -ed). Contoh penting: Go -> Went, Eat -> Ate, See -> Saw, Drink -> Drank, Write -> Wrote, Take -> Took, Make -> Made.",
+        quizzes: [
+          {
+            q: "Manakah bentuk Verb 2 (Past Tense) yang benar dari kata kerja 'EAT' (makan)?",
+            options: ["Eated", "Eats", "Ate", "Eaten"],
+            answer: 2,
+            explain: "Verb 1: Eat -> Verb 2 (Past Tense): 'Ate' -> Verb 3: Eaten."
+          },
+          {
+            q: "Pilihlah Verb 2 yang benar untuk melengkapi: 'We _______ a beautiful rainbow after the rain yesterday.' (Melihat = See)",
+            options: ["seed", "saw", "seen", "sees"],
+            answer: 1,
+            explain: "Bentuk Past Tense (Verb 2) dari 'see' adalah 'saw'."
+          },
+          {
+            q: "Pasangan Verb 1 dan Verb 2 (Irregular Verb) manakah yang BENAR di bawah ini?",
+            options: [
+              "Drink -> Drinked",
+              "Write -> Wrote",
+              "Run -> Runned",
+              "Sing -> Singed"
+            ],
+            answer: 1,
+            explain: "'Write' (menulis) berubah menjadi 'Wrote' pada bentuk Simple Past Tense."
+          },
+          {
+            q: "Temukan Verb 2 yang tepat: 'Andi _______ a glass of warm milk before sleeping last night.' (Minum = Drink)",
+            options: ["drank", "drunk", "drinked", "drinks"],
+            answer: 0,
+            explain: "Verb 2 dari 'drink' adalah 'drank'."
+          }
+        ]
+      },
+      negatif_tanya: {
+        title: "Pos 5: Kalimat Negatif & Tanya (Did)",
+        icon: "🏛️",
+        color: 0x10B981,
+        materi: "Aturan Emas Past Tense! Pada kalimat Negatif (didn't) dan kalimat Tanya (Did ...?), kata kerja KEMBALI KE VERB 1 (kata kerja dasar)! Contoh: (+) He went to school. (-) He didn't go to school. (?) Did he go to school?",
+        quizzes: [
+          {
+            q: "Perbaiki kalimat negatif yang salah ini: 'She didn't went to the party last night.'",
+            options: [
+              "She didn't goes to the party last night.",
+              "She didn't go to the party last night.",
+              "She don't went to the party last night.",
+              "She wasn't go to the party last night."
+            ],
+            answer: 1,
+            explain: "Setelah 'didn't', kata kerja harus kembali ke bentuk dasar (Verb 1) yaitu 'go', bukan 'went'."
+          },
+          {
+            q: "Manakah kalimat tanya Simple Past Tense yang benar?",
+            options: [
+              "Did you watched the movie yesterday?",
+              "Did you watch the movie yesterday?",
+              "Do you watched the movie yesterday?",
+              "Were you watch the movie yesterday?"
+            ],
+            answer: 1,
+            explain: "Karena sudah ada 'Did' di depan kalimat tanya, maka kata kerjanya kembali ke Verb 1 ('watch')."
+          },
+          {
+            q: "Lengkapi kalimat ini: 'They _______ play football yesterday because it rained heavily.'",
+            options: ["don't", "doesn't", "didn't", "aren't"],
+            answer: 2,
+            explain: "Untuk kalimat negatif di masa lampau (yesterday) yang diikuti Verb 1 (play), gunakan 'didn't' (did not)."
+          },
+          {
+            q: "Ubahlah kalimat 'Budi ate an apple' menjadi kalimat negatif (-):",
+            options: [
+              "Budi didn't ate an apple.",
+              "Budi didn't eat an apple.",
+              "Budi doesn't eat an apple.",
+              "Budi not ate an apple."
+            ],
+            answer: 1,
+            explain: "'Ate' kembali menjadi Verb 1 ('eat') setelah ditambahkan 'didn't'."
+          }
+        ]
+      }
+    };
+
+    // Bank Soal Gulungan Kalimat di Dunia 3D (12 Tantangan)
+    const worldScrollChallenges = [
+      {
+        q: "📜 GULUNGAN #1: Manakah Verb 2 dari kata 'TAKE' (mengambil)?",
+        options: ["Taked", "Took", "Taken", "Takes"],
+        answer: 1,
+        explain: "Take adalah Irregular Verb, bentuk keduanya (Verb 2) adalah 'Took'."
+      },
+      {
+        q: "📜 GULUNGAN #2: Perbaiki kalimat ini: 'I see a big elephant at the safari park last Sunday.'",
+        options: [
+          "I saw a big elephant at the safari park last Sunday.",
+          "I seed a big elephant at the safari park last Sunday.",
+          "I seen a big elephant at the safari park last Sunday.",
+          "I seeing a big elephant at the safari park last Sunday."
+        ],
+        answer: 0,
+        explain: "'See' diubah menjadi Verb 2 'saw' karena terjadi 'last Sunday'."
+      },
+      {
+        q: "📜 GULUNGAN #3: 'My brother _______ his homework two hours ago.' (Menyelesaikan = Finish)",
+        options: ["finish", "finishes", "finished", "finishing"],
+        answer: 2,
+        explain: "'Finished' adalah bentuk Past Tense dari finish."
+      },
+      {
+        q: "📜 GULUNGAN #4: Manakah kalimat Past Tense yang BENAR?",
+        options: [
+          "We didn't bought anything at the mall.",
+          "We didn't buy anything at the mall.",
+          "We don't bought anything at the mall.",
+          "We weren't buy anything at the mall."
+        ],
+        answer: 1,
+        explain: "Setelah 'didn't', gunakan Verb 1 ('buy')."
+      },
+      {
+        q: "📜 GULUNGAN #5: Apakah bentuk Verb 2 dari kata kerja 'MAKE' (membuat)?",
+        options: ["Maked", "Made", "Makes", "Making"],
+        answer: 1,
+        explain: "Make -> Made (Irregular Verb)."
+      },
+      {
+        q: "📜 GULUNGAN #6: '_______ you sleep well last night?' Kata tanya yang tepat adalah...",
+        options: ["Do", "Does", "Did", "Were"],
+        answer: 2,
+        explain: "Kalimat tanya masa lampau yang diikuti kata kerja 'sleep' menggunakan 'Did'."
+      },
+      {
+        q: "📜 GULUNGAN #7: Perbaiki kalimat ini: 'The students was in the laboratory yesterday.'",
+        options: [
+          "The students were in the laboratory yesterday.",
+          "The students are in the laboratory yesterday.",
+          "The students is in the laboratory yesterday.",
+          "The students did in the laboratory yesterday."
+        ],
+        answer: 0,
+        explain: "'The students' berjumlah jamak (banyak), sehingga memakai 'were'."
+      },
+      {
+        q: "📜 GULUNGAN #8: Apakah bentuk Past Tense (Verb 2) dari 'RUN' (berlari)?",
+        options: ["Runned", "Ran", "Running", "Runs"],
+        answer: 1,
+        explain: "Run berubah menjadi 'Ran' pada Simple Past Tense."
+      },
+      {
+        q: "📜 GULUNGAN #9: Pilih kalimat yang memiliki keterangan waktu Past Tense!",
+        options: [
+          "She swam in the swimming pool yesterday.",
+          "She swims every weekend.",
+          "She is swimming right now.",
+          "She will swim tomorrow morning."
+        ],
+        answer: 0,
+        explain: "'Swam' (Verb 2 dari swim) + 'yesterday' (kemarin)."
+      },
+      {
+        q: "📜 GULUNGAN #10: 'Siti _______ a letter to her grandmother last week.' (Menulis = Write)",
+        options: ["writed", "wrote", "written", "writes"],
+        answer: 1,
+        explain: "Bentuk Verb 2 dari write adalah 'wrote'."
+      },
+      {
+        q: "📜 GULUNGAN #11: Apakah bentuk Verb 2 dari kata 'GIVE' (memberi)?",
+        options: ["Gived", "Gave", "Given", "Gives"],
+        answer: 1,
+        explain: "Give -> Gave -> Given. Verb 2-nya adalah 'Gave'."
+      },
+      {
+        q: "📜 GULUNGAN #12: Perbaiki kalimat: 'Did Andi came to your house yesterday?'",
+        options: [
+          "Did Andi come to your house yesterday?",
+          "Did Andi comes to your house yesterday?",
+          "Do Andi came to your house yesterday?",
+          "Was Andi came to your house yesterday?"
+        ],
+        answer: 0,
+        explain: "Karena ada 'Did', maka 'came' harus kembali ke Verb 1 yaitu 'come'."
+      }
+    ];
+
+    /* =====================================================================
+       3. STATE 4 PEMAIN & PENDAFTARAN NAMA
+       ===================================================================== */
+    let gameState = {
+      players: [
+        { id: 0, name: "Budi", score: 0, color: "#EF4444", hex: 0xEF4444 },
+        { id: 1, name: "Siti", score: 0, color: "#3B82F6", hex: 0x3B82F6 },
+        { id: 2, name: "Andi", score: 0, color: "#10B981", hex: 0x10B981 },
+        { id: 3, name: "Lani", score: 0, color: "#F59E0B", hex: 0xF59E0B }
+      ],
+      activeTurnIndex: 0,
+      scrollsFound: 0,
+      totalScrolls: 12,
+      uniform: "sd",
+      accessory: "none",
+      curriculum: defaultCurriculum
+    };
+
+    function startPartyAdventure() {
+      const p1 = document.getElementById('input-p1').value.trim() || "Petualang 1";
+      const p2 = document.getElementById('input-p2').value.trim() || "Petualang 2";
+      const p3 = document.getElementById('input-p3').value.trim() || "Petualang 3";
+      const p4 = document.getElementById('input-p4').value.trim() || "Petualang 4";
+
+      gameState.players[0].name = p1;
+      gameState.players[1].name = p2;
+      gameState.players[2].name = p3;
+      gameState.players[3].name = p4;
+
+      document.getElementById('registration-overlay').style.display = 'none';
+      audio.playLevelUp();
+      updatePartyFloatingLabels();
+      saveState();
+      showToast(`Selamat berpetualang ${p1}, ${p2}, ${p3}, & ${p4}! Cari kalimat Past Tense!`, "🚀");
+    }
+
+    function openRegistrationModal() {
+      document.getElementById('input-p1').value = gameState.players[0].name;
+      document.getElementById('input-p2').value = gameState.players[1].name;
+      document.getElementById('input-p3').value = gameState.players[2].name;
+      document.getElementById('input-p4').value = gameState.players[3].name;
+      document.getElementById('registration-overlay').style.display = 'flex';
+    }
+
+    function saveState() {
+      localStorage.setItem("roblox_past_tense_4p", JSON.stringify({
+        players: gameState.players,
+        activeTurnIndex: gameState.activeTurnIndex,
+        uniform: gameState.uniform,
+        accessory: gameState.accessory,
+        curriculum: gameState.curriculum
+      }));
+      updateHUD();
+    }
+
+    function loadSavedState() {
+      const saved = localStorage.getItem("roblox_past_tense_4p");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.players && parsed.players.length === 4) {
+            gameState.players = parsed.players;
+            document.getElementById('input-p1').value = gameState.players[0].name;
+            document.getElementById('input-p2').value = gameState.players[1].name;
+            document.getElementById('input-p3').value = gameState.players[2].name;
+            document.getElementById('input-p4').value = gameState.players[3].name;
+          }
+          if (parsed.curriculum) gameState.curriculum = parsed.curriculum;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      updateHUD();
+    }
+
+    function awardPlayerPoints(playerIdx, pts) {
+      gameState.players[playerIdx].score += pts;
+      saveState();
+    }
+
+    function advanceTurn() {
+      gameState.activeTurnIndex = (gameState.activeTurnIndex + 1) % 4;
+      saveState();
+    }
+
+    function selectActiveTurn(idx) {
+      gameState.activeTurnIndex = idx;
+      saveState();
+      showToast(`Giliran aktif berpindah ke ${gameState.players[idx].name}!`, "🎯");
+    }
+
+    function resetAllScores() {
+      gameState.players.forEach(p => p.score = 0);
+      saveState();
+      renderLeaderboardUI();
+      showToast("Semua skor pemain telah di-reset menjadi 0!", "🔄");
+    }
+
+    function showToast(msg, icon = "🌟") {
+      const banner = document.getElementById("toast-banner");
+      document.getElementById("toast-msg").innerText = msg;
+      document.getElementById("toast-icon").innerText = icon;
+      banner.classList.add("show");
+      setTimeout(() => banner.classList.remove("show"), 3400);
+    }
+
+    /* =====================================================================
+       4. ENGINE 3D THREE.JS & DUNIA PETUALANGAN PAST TENSE
+       ===================================================================== */
+    const canvas = document.getElementById('game-canvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x7DD3FC);
+    scene.fog = new THREE.FogExp2(0x7DD3FC, 0.013);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfffaed, 0.95);
+    sunLight.position.set(45, 75, 35);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    const shadowD = 75;
+    sunLight.shadow.camera.left = -shadowD;
+    sunLight.shadow.camera.right = shadowD;
+    sunLight.shadow.camera.top = shadowD;
+    sunLight.shadow.camera.bottom = -shadowD;
+    scene.add(sunLight);
+
+    const interactiveZones = [];
+    const animatedCollectibles = [];
+    const npcs = [];
+    const fountainDrops = [];
+
+    const materials = {
+      grass: new THREE.MeshLambertMaterial({ color: 0x48BB78 }),
+      road: new THREE.MeshLambertMaterial({ color: 0x334155 }),
+      sidewalk: new THREE.MeshLambertMaterial({ color: 0xCBD5E1 }),
+      roadMarking: new THREE.MeshBasicMaterial({ color: 0xFFFFFF }),
+      fountainWater: new THREE.MeshLambertMaterial({ color: 0x38BDF8, transparent: true, opacity: 0.8 }),
+      trunk: new THREE.MeshLambertMaterial({ color: 0x78350F }),
+      leaves: new THREE.MeshLambertMaterial({ color: 0x15803D }),
+      gold: new THREE.MeshStandardMaterial({ color: 0xF59E0B, metalness: 0.85, roughness: 0.2 }),
+      scrollPaper: new THREE.MeshStandardMaterial({ color: 0xFEF08A, emissive: 0xF59E0B, emissiveIntensity: 0.35 })
+    };
+
+    // Landasan & Jalan Raya
+    const groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), materials.grass);
+    groundMesh.rotation.x = -Math.PI / 2;
+    groundMesh.receiveShadow = true;
+    scene.add(groundMesh);
+
+    function createRoadGrid() {
+      const roadGroup = new THREE.Group();
+      const roadW = 10;
+      const r1 = new THREE.Mesh(new THREE.PlaneGeometry(roadW, 230), materials.road);
+      r1.rotation.x = -Math.PI / 2;
+      r1.position.y = 0.02;
+      roadGroup.add(r1);
+
+      const r2 = new THREE.Mesh(new THREE.PlaneGeometry(230, roadW), materials.road);
+      r2.rotation.x = -Math.PI / 2;
+      r2.position.y = 0.02;
+      roadGroup.add(r2);
+
+      for (let i = -100; i <= 100; i += 8) {
+        if (Math.abs(i) < 16) continue;
+        const dash1 = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 4), materials.roadMarking);
+        dash1.rotation.x = -Math.PI / 2;
+        dash1.position.set(0, 0.03, i);
+        roadGroup.add(dash1);
+
+        const dash2 = new THREE.Mesh(new THREE.PlaneGeometry(4, 0.5), materials.roadMarking);
+        dash2.rotation.x = -Math.PI / 2;
+        dash2.position.set(i, 0.03, 0);
+        roadGroup.add(dash2);
+      }
+      scene.add(roadGroup);
+    }
+    createRoadGrid();
+
+    // Air Mancur Alun-Alun
+    function createCitySquare() {
+      const squareGroup = new THREE.Group();
+      const plaza = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 0.25, 32), materials.sidewalk);
+      plaza.position.set(0, 0.12, 0);
+      squareGroup.add(plaza);
+
+      const basin1 = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 6, 1.2, 24), new THREE.MeshLambertMaterial({ color: 0x94A3B8 }));
+      basin1.position.set(0, 0.7, 0);
+      squareGroup.add(basin1);
+
+      const water1 = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 5.2, 0.2, 24), materials.fountainWater);
+      water1.position.set(0, 1.2, 0);
+      squareGroup.add(water1);
+
+      const centerPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.9, 3.4, 16), new THREE.MeshLambertMaterial({ color: 0xCBD5E1 }));
+      centerPillar.position.set(0, 1.7, 0);
+      squareGroup.add(centerPillar);
+
+      const dropGeo = new THREE.DodecahedronGeometry(0.1, 0);
+      const dropMat = new THREE.MeshBasicMaterial({ color: 0xE0F2FE });
+      for (let i = 0; i < 24; i++) {
+        const drop = new THREE.Mesh(dropGeo, dropMat);
+        drop.position.set(0, 3.2, 0);
+        const angle = (i / 24) * Math.PI * 2;
+        const speed = 0.035 + Math.random() * 0.02;
+        fountainDrops.push({
+          mesh: drop,
+          velX: Math.cos(angle) * speed,
+          velZ: Math.sin(angle) * speed,
+          velY: 0.08 + Math.random() * 0.05,
+          startY: 3.2
+        });
+        squareGroup.add(drop);
+      }
+      scene.add(squareGroup);
+    }
+    createCitySquare();
+
+    // Pepohonan
+    for (let i = 0; i < 28; i++) {
+      const x = (Math.random() - 0.5) * 180;
+      const z = (Math.random() - 0.5) * 180;
+      if (Math.abs(x) < 18 || Math.abs(z) < 18) continue;
+
+      const tree = new THREE.Group();
+      const trunkH = 2.4 + Math.random() * 1.5;
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.42, trunkH, 8), materials.trunk);
+      trunk.position.y = trunkH / 2;
+      trunk.castShadow = true;
+      tree.add(trunk);
+
+      const crown = new THREE.Mesh(new THREE.DodecahedronGeometry(1.7 + Math.random() * 0.8, 1), materials.leaves);
+      crown.position.y = trunkH + 1.2;
+      crown.castShadow = true;
+      tree.add(crown);
+
+      tree.position.set(x, 0, z);
+      scene.add(tree);
+    }
+
+    // Billboard Tekstur
+    function createBillboardTexture(titleText, colorHex) {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 160;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = colorHex;
+      ctx.roundRect(10, 10, 492, 140, 24);
+      ctx.fill();
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 36px Nunito, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(titleText, 256, 80);
+      return new THREE.CanvasTexture(c);
+    }
+
+    // 5 Pos Gedung Tantangan Past Tense
+    const buildingData = [
+      { key: "cari_kalimat", name: "Pos 1: Cari Past Tense", color: 0xEF4444, hex: "#EF4444", pos: [40, 0, 40], rot: -Math.PI / 4, icon: "🔎" },
+      { key: "perbaiki_kalimat", name: "Pos 2: Perbaiki Kalimat", color: 0x3B82F6, hex: "#3B82F6", pos: [-40, 0, 40], rot: Math.PI / 4, icon: "🛠️" },
+      { key: "regular_verb", name: "Pos 3: Regular Verb", color: 0xF59E0B, hex: "#F59E0B", pos: [-40, 0, -40], rot: 3 * Math.PI / 4, icon: "📘" },
+      { key: "irregular_verb", name: "Pos 4: Irregular Verb", color: 0x8B5CF6, hex: "#8B5CF6", pos: [40, 0, -40], rot: -3 * Math.PI / 4, icon: "⚡" },
+      { key: "negatif_tanya", name: "Pos 5: Did & Didn't", color: 0x10B981, hex: "#10B981", pos: [0, 0, -56], rot: Math.PI, icon: "🏛️" }
+    ];
+
+    buildingData.forEach(b => {
+      const bGroup = new THREE.Group();
+      const mainBuilding = new THREE.Mesh(new THREE.BoxGeometry(16, 12, 18), new THREE.MeshLambertMaterial({ color: b.color }));
+      mainBuilding.position.y = 6;
+      mainBuilding.castShadow = true;
+      bGroup.add(mainBuilding);
+
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(13.2, 6.2, 4), new THREE.MeshLambertMaterial({ color: 0x1E293B }));
+      roof.rotation.y = Math.PI / 4;
+      roof.position.y = 15.1;
+      bGroup.add(roof);
+
+      const door = new THREE.Mesh(new THREE.BoxGeometry(4.5, 6, 0.4), new THREE.MeshLambertMaterial({ color: 0x0F172A }));
+      door.position.set(0, 3, 9.1);
+      bGroup.add(door);
+
+      const labelTex = createBillboardTexture(b.name, b.hex);
+      const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(9.2, 2.7), new THREE.MeshBasicMaterial({ map: labelTex, transparent: true }));
+      labelMesh.position.set(0, 13.5, 9.4);
+      bGroup.add(labelMesh);
+
+      const padMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(2.6, 2.8, 0.25, 24),
+        new THREE.MeshStandardMaterial({ color: b.color, emissive: b.color, emissiveIntensity: 0.65, transparent: true, opacity: 0.85 })
+      );
+      padMesh.position.set(0, 0.15, 12.5);
+      bGroup.add(padMesh);
+
+      bGroup.position.set(...b.pos);
+      bGroup.rotation.y = b.rot;
+      scene.add(bGroup);
+
+      const worldPadPos = new THREE.Vector3(0, 0.2, 12.5).applyEuler(bGroup.rotation).add(bGroup.position);
+      interactiveZones.push({
+        type: 'building',
+        key: b.key,
+        name: b.name,
+        icon: b.icon,
+        pos: worldPadPos,
+        radius: 3.8,
+        mesh: padMesh
+      });
+    });
+
+    // Spawn 12 Gulungan Kalimat Past Tense & Koin Bonus di Dunia 3D
+    function spawnWorldScrollsAndCoins() {
+      // 12 Gulungan Kalimat Past Tense
+      const scrollPositions = [
+        [18, 18], [-18, 18], [-18, -18], [18, -18],
+        [0, 32], [0, -32], [32, 0], [-32, 0],
+        [25, 48], [-25, 48], [-25, -48], [25, -48]
+      ];
+
+      scrollPositions.forEach((coords, idx) => {
+        const scrollGroup = new THREE.Group();
+        const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.35, 16), materials.scrollPaper);
+        cyl.rotation.z = Math.PI / 4;
+        scrollGroup.add(cyl);
+
+        const ribbon = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.25, 16), new THREE.MeshBasicMaterial({ color: 0xEF4444 }));
+        ribbon.rotation.z = Math.PI / 4;
+        scrollGroup.add(ribbon);
+
+        scrollGroup.position.set(coords[0], 1.5, coords[1]);
+        scene.add(scrollGroup);
+
+        animatedCollectibles.push({
+          type: 'scroll',
+          challengeIdx: idx,
+          mesh: scrollGroup,
+          basePos: scrollGroup.position.clone()
+        });
+      });
+
+      // 12 Koin Skor Cepat (+5 Poin)
+      const coinGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.16, 16);
+      coinGeo.rotateX(Math.PI / 2);
+      for (let i = 0; i < 12; i++) {
+        const coin = new THREE.Mesh(coinGeo, materials.gold);
+        const angle = (i / 12) * Math.PI * 2;
+        const dist = 12 + (i % 3) * 14;
+        coin.position.set(Math.cos(angle) * dist, 1.2, Math.sin(angle) * dist);
+        scene.add(coin);
+        animatedCollectibles.push({ type: 'coin', mesh: coin, basePos: coin.position.clone() });
+      }
+    }
+    spawnWorldScrollsAndCoins();
+
+    // NPC Petunjuk Past Tense
+    function createNPC(name, x, z, dialogue) {
+      const npcGroup = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.1, 0.6), new THREE.MeshLambertMaterial({ color: 0x0284C7 }));
+      body.position.y = 1.1;
+      npcGroup.add(body);
+
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), new THREE.MeshLambertMaterial({ color: 0xFFDBAC }));
+      head.position.y = 2.0;
+      npcGroup.add(head);
+
+      const exC = document.createElement('canvas');
+      exC.width = 128; exC.height = 128;
+      const ctx = exC.getContext('2d');
+      ctx.fillStyle = '#F59E0B';
+      ctx.beginPath(); ctx.arc(64, 64, 58, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 84px Nunito'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('!', 64, 66);
+
+      const exMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(exC), transparent: true, side: THREE.DoubleSide }));
+      exMesh.position.y = 3.15;
+      npcGroup.add(exMesh);
+
+      npcGroup.position.set(x, 0, z);
+      scene.add(npcGroup);
+
+      interactiveZones.push({
+        type: 'npc',
+        name: name,
+        dialogue: dialogue,
+        pos: new THREE.Vector3(x, 1, z),
+        radius: 3.2,
+        exMesh: exMesh
+      });
+      npcs.push({ group: npcGroup, exMesh: exMesh });
+    }
+
+    createNPC("Mr. Hendra (Guru Bahasa Inggris)", 11, 12, "Ingat ya 4 Sekawan! Kalimat positif Past Tense memakai Verb 2 (went, ate, played). Tapi jika ada DID atau DIDN'T, kata kerjanya kembali ke Verb 1!");
+    createNPC("Rani (Penjaga Skor)", -11, 12, "Kumpulkan 12 Gulungan Kuning di jalanan kota dan selesaikan 5 Pos Gedung! Siapa yang poinnya paling tinggi di antara kalian berempat akan menjadi Juara 1!");
+
+    /* =====================================================================
+       5. SQUAD 4 PETUALANG 3D (LEADER + 3 TEMAN YANG MENGIKUTI)
+       ===================================================================== */
+    function createNameplateCanvas(text, borderColor) {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 64;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.roundRect(6, 6, 244, 52, 16);
+      ctx.fill();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = borderColor;
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 26px Nunito, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 128, 33);
+      return new THREE.CanvasTexture(c);
+    }
+
+    function buildCharacterRig(shirtColorHex, pantsColorHex, nameText, badgeColorStr) {
+      const group = new THREE.Group();
+      const mats = {
+        skin: new THREE.MeshLambertMaterial({ color: 0xFCD34D }),
+        hair: new THREE.MeshLambertMaterial({ color: 0x3B2F2F }),
+        shirt: new THREE.MeshLambertMaterial({ color: shirtColorHex }),
+        pants: new THREE.MeshLambertMaterial({ color: pantsColorHex })
+      };
+
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.7), mats.skin);
+      head.position.y = 2.05;
+      head.castShadow = true;
+      group.add(head);
+
+      const hair = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.35, 0.76), mats.hair);
+      hair.position.set(0, 2.32, 0);
+      group.add(hair);
+
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.0, 0.55), mats.shirt);
+      body.position.y = 1.35;
+      body.castShadow = true;
+      group.add(body);
+
+      const legGeo = new THREE.BoxGeometry(0.35, 0.85, 0.4);
+      const leftLeg = new THREE.Mesh(legGeo, mats.pants);
+      leftLeg.position.set(-0.25, 0.5, 0);
+      group.add(leftLeg);
+
+      const rightLeg = new THREE.Mesh(legGeo, mats.pants);
+      rightLeg.position.set(0.25, 0.5, 0);
+      group.add(rightLeg);
+
+      const armGeo = new THREE.BoxGeometry(0.25, 0.75, 0.3);
+      const leftArm = new THREE.Mesh(armGeo, mats.shirt);
+      leftArm.position.set(-0.62, 1.35, 0);
+      group.add(leftArm);
+
+      const rightArm = new THREE.Mesh(armGeo, mats.shirt);
+      rightArm.position.set(0.62, 1.35, 0);
+      group.add(rightArm);
+
+      const accGroup = new THREE.Group();
+      group.add(accGroup);
+
+      // Nameplate di atas kepala
+      const npTex = createNameplateCanvas(nameText, badgeColorStr);
+      const npMat = new THREE.MeshBasicMaterial({ map: npTex, transparent: true, depthTest: false });
+      const npMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.55), npMat);
+      npMesh.position.y = 2.95;
+      group.add(npMesh);
+
+      return {
+        group,
+        mats,
+        leftLeg,
+        rightLeg,
+        leftArm,
+        rightArm,
+        accGroup,
+        npMesh
+      };
+    }
+
+    // Buat 4 Karakter Petualang di Dunia 3D
+    const partyRigs = [
+      buildCharacterRig(0xEF4444, 0x1E293B, "Budi", "#EF4444"),
+      buildCharacterRig(0x3B82F6, 0x1E293B, "Siti", "#3B82F6"),
+      buildCharacterRig(0x10B981, 0x1E293B, "Andi", "#10B981"),
+      buildCharacterRig(0xF59E0B, 0x1E293B, "Lani", "#F59E0B")
+    ];
+
+    const startPositions = [
+      new THREE.Vector3(0, 0, 20),
+      new THREE.Vector3(-2.2, 0, 22),
+      new THREE.Vector3(2.2, 0, 22),
+      new THREE.Vector3(0, 0, 24)
+    ];
+
+    partyRigs.forEach((rig, idx) => {
+      rig.group.position.copy(startPositions[idx]);
+      scene.add(rig.group);
+    });
+
+    const playerGroup = partyRigs[0].group; // Leader yang dikendalikan langsung
+
+    // Riwayat jejak posisi agar 3 teman di belakang mengikuti secara mulus
+    const leaderTrail = [];
+    for (let i = 0; i < 60; i++) {
+      leaderTrail.push({ pos: new THREE.Vector3(0, 0, 20 + i * 0.1), rotY: 0 });
+    }
+
+    function updatePartyFloatingLabels() {
+      partyRigs.forEach((rig, idx) => {
+        const p = gameState.players[idx];
+        const newTex = createNameplateCanvas(`${p.name} (${p.score})`, p.color);
+        rig.npMesh.material.map = newTex;
+        rig.npMesh.material.needsUpdate = true;
+      });
+    }
+
+    // Presets Seragam
+    const outfitPresets = {
+      sd: { name: "Tim Merah-Biru", shirt: 0xEF4444, pants: 0x1E293B, icon: "🎒" },
+      smp: { name: "Seragam SMP", shirt: 0xFFFFFF, pants: 0x2563EB, icon: "📘" },
+      sma: { name: "Seragam SMA", shirt: 0xFFFFFF, pants: 0x64748B, icon: "🎓" },
+      pramuka: { name: "Pramuka Keren", shirt: 0xD97706, pants: 0x78350F, icon: "🏕️" },
+      batik: { name: "Batik Nusantara", shirt: 0x9333EA, pants: 0x1E293B, icon: "✨" }
+    };
+
+    function applyOutfit(key) {
+      const preset = outfitPresets[key] || outfitPresets.sd;
+      partyRigs[0].mats.shirt.color.setHex(preset.shirt);
+      partyRigs[0].mats.pants.color.setHex(preset.pants);
+      gameState.uniform = key;
+      saveState();
+      renderWardrobeUI();
+    }
+
+    function applyAccessory(type) {
+      gameState.accessory = type;
+      const accGroup = partyRigs[0].accGroup;
+      while (accGroup.children.length > 0) accGroup.remove(accGroup.children[0]);
+
+      if (type === 'cap') {
+        const cap = new THREE.Group();
+        const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.44, 0.25, 16), new THREE.MeshLambertMaterial({ color: 0xDC2626 }));
+        crown.position.set(0, 2.52, 0);
+        cap.add(crown);
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.05, 0.4), new THREE.MeshLambertMaterial({ color: 0xFFFFFF }));
+        visor.position.set(0, 2.45, 0.4);
+        cap.add(visor);
+        accGroup.add(cap);
+      } else if (type === 'glasses') {
+        const frameMat = new THREE.MeshLambertMaterial({ color: 0x111827 });
+        const glasses = new THREE.Group();
+        const f1 = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.18, 0.05), frameMat);
+        f1.position.set(-0.16, 2.1, 0.38);
+        glasses.add(f1);
+        const f2 = f1.clone();
+        f2.position.set(0.16, 2.1, 0.38);
+        glasses.add(f2);
+        accGroup.add(glasses);
+      }
+      saveState();
+      renderWardrobeUI();
+    }
+
+    /* =====================================================================
+       6. INPUT CONTROLLER
+       ===================================================================== */
+    const input = { forward: 0, backward: 0, left: 0, right: 0, jump: false, sprint: false };
+    let isGamePaused = false;
+
+    window.addEventListener('keydown', (e) => {
+      if (document.getElementById('registration-overlay').style.display !== 'none') return;
+      if (e.code === 'Escape') {
+        if (document.querySelector('.modal-overlay.active')) closeModal();
+        else togglePause();
+        return;
+      }
+      if (document.querySelector('.modal-overlay.active') || isGamePaused) return;
+
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': input.forward = 1; break;
+        case 'KeyS': case 'ArrowDown': input.backward = 1; break;
+        case 'KeyA': case 'ArrowLeft': input.left = 1; break;
+        case 'KeyD': case 'ArrowRight': input.right = 1; break;
+        case 'Space':
+          if (!input.jump && playerState.isGrounded) {
+            input.jump = true;
+            playerState.velocityY = playerState.jumpForce;
+            playerState.isGrounded = false;
+            audio.playJump();
+          }
+          break;
+        case 'ShiftLeft': case 'ShiftRight': input.sprint = true; break;
+        case 'KeyE': triggerCurrentInteraction(); break;
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': input.forward = 0; break;
+        case 'KeyS': case 'ArrowDown': input.backward = 0; break;
+        case 'KeyA': case 'ArrowLeft': input.left = 0; break;
+        case 'KeyD': case 'ArrowRight': input.right = 0; break;
+        case 'Space': input.jump = false; break;
+        case 'ShiftLeft': case 'ShiftRight': input.sprint = false; break;
+      }
+    });
+
+    let cameraOrbit = { yaw: 0, pitch: 0.38, distance: 15 };
+    let isDragging = false;
+    let prevMousePos = { x: 0, y: 0 };
+
+    window.addEventListener('mousedown', (e) => {
+      if (e.target.tagName !== 'CANVAS') return;
+      isDragging = true;
+      prevMousePos = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging || isGamePaused) return;
+      const dx = e.clientX - prevMousePos.x;
+      const dy = e.clientY - prevMousePos.y;
+      cameraOrbit.yaw -= dx * 0.006;
+      cameraOrbit.pitch = Math.max(0.1, Math.min(1.2, cameraOrbit.pitch + dy * 0.005));
+      prevMousePos = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('wheel', (e) => {
+      if (isGamePaused) return;
+      cameraOrbit.distance = Math.max(7, Math.min(24, cameraOrbit.distance + e.deltaY * 0.015));
+    }, { passive: true });
+
+    // Joystick Layar Sentuh
+    const joystickZone = document.getElementById('joystick-zone');
+    const joystickHandle = document.getElementById('joystick-handle');
+    let touchStartPos = null;
+
+    joystickZone.addEventListener('touchstart', (e) => {
+      if (isGamePaused) return;
+      const rect = joystickZone.getBoundingClientRect();
+      touchStartPos = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    }, { passive: false });
+
+    joystickZone.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!touchStartPos || isGamePaused) return;
+      const t = e.touches[0];
+      const maxDist = 45;
+      let dx = t.clientX - touchStartPos.x;
+      let dy = t.clientY - touchStartPos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > maxDist) {
+        dx = (dx / dist) * maxDist;
+        dy = (dy / dist) * maxDist;
+      }
+      joystickHandle.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+      const nx = dx / maxDist;
+      const ny = dy / maxDist;
+      input.left = nx < -0.2 ? -nx : 0;
+      input.right = nx > 0.2 ? nx : 0;
+      input.forward = ny < -0.2 ? -ny : 0;
+      input.backward = ny > 0.2 ? ny : 0;
+    }, { passive: false });
+
+    function resetJoystick() {
+      touchStartPos = null;
+      joystickHandle.style.transform = `translate(-50%, -50%)`;
+      input.forward = 0; input.backward = 0; input.left = 0; input.right = 0;
+    }
+    joystickZone.addEventListener('touchend', resetJoystick);
+    joystickZone.addEventListener('touchcancel', resetJoystick);
+
+    document.getElementById('touch-jump').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (playerState.isGrounded && !isGamePaused) {
+        playerState.velocityY = playerState.jumpForce;
+        playerState.isGrounded = false;
+        audio.playJump();
+      }
+    });
+
+    document.getElementById('touch-interact').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      triggerCurrentInteraction();
+    });
+
+    document.getElementById('btn-pause').onclick = togglePause;
+    function togglePause() {
+      isGamePaused = !isGamePaused;
+      showToast(isGamePaused ? "Permainan Dijeda ⏸️" : "Lanjut Berpetualang ▶️", "⏱️");
+      document.getElementById('btn-pause').innerText = isGamePaused ? "▶️" : "⏸️";
+    }
+
+    /* =====================================================================
+       7. UPDATE FISIKA TIM 4 PEMAIN & DETEKSI GULUNGAN KALIMAT
+       ===================================================================== */
+    const playerState = {
+      velocityY: 0,
+      gravity: -24,
+      jumpForce: 10.5,
+      isGrounded: true,
+      walkCycle: 0
+    };
+
+    let nearestInteraction = null;
+
+    function updatePlayerParty(delta) {
+      if (isGamePaused) return;
+
+      let moveZ = (input.backward - input.forward);
+      let moveX = (input.right - input.left);
+      const moveDir = new THREE.Vector3(moveX, 0, moveZ);
+      const isMoving = moveDir.length() > 0.1;
+
+      if (isMoving) {
+        moveDir.normalize();
+        moveDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraOrbit.yaw);
+
+        const speed = input.sprint ? 14 : 9.2;
+        playerGroup.position.x += moveDir.x * speed * delta;
+        playerGroup.position.z += moveDir.z * speed * delta;
+
+        const targetRot = Math.atan2(moveDir.x, moveDir.z);
+        playerGroup.rotation.y = THREE.MathUtils.lerp(playerGroup.rotation.y, targetRot, 0.22);
+
+        // Simpan jejak untuk diikuti 3 anggota tim lainnya
+        leaderTrail.unshift({
+          pos: playerGroup.position.clone(),
+          rotY: playerGroup.rotation.y
+        });
+        if (leaderTrail.length > 80) leaderTrail.pop();
+
+        playerState.walkCycle += delta * (input.sprint ? 18 : 13);
+      }
+
+      // Gravitasi Leader
+      playerState.velocityY += playerState.gravity * delta;
+      playerGroup.position.y += playerState.velocityY * delta;
+      if (playerGroup.position.y <= 0) {
+        playerGroup.position.y = 0;
+        playerState.velocityY = 0;
+        playerState.isGrounded = true;
+      }
+
+      playerGroup.position.x = Math.max(-110, Math.min(110, playerGroup.position.x));
+      playerGroup.position.z = Math.max(-110, Math.min(110, playerGroup.position.z));
+
+      // Animasi jalan & formasi mengikuti untuk 4 karakter
+      const trailOffsets = [0, 12, 24, 36];
+      partyRigs.forEach((rig, idx) => {
+        if (idx > 0) {
+          const trailPoint = leaderTrail[Math.min(trailOffsets[idx], leaderTrail.length - 1)];
+          if (trailPoint) {
+            // Formasi agak menyebar sedikit di kiri/kanan agar ke-4 karakter terlihat jelas
+            const sideOffset = idx === 1 ? -1.4 : (idx === 2 ? 1.4 : 0);
+            const targetX = trailPoint.pos.x + Math.cos(trailPoint.rotY) * sideOffset;
+            const targetZ = trailPoint.pos.z - Math.sin(trailPoint.rotY) * sideOffset;
+            rig.group.position.x = THREE.MathUtils.lerp(rig.group.position.x, targetX, 0.15);
+            rig.group.position.z = THREE.MathUtils.lerp(rig.group.position.z, targetZ, 0.15);
+            rig.group.rotation.y = THREE.MathUtils.lerp(rig.group.rotation.y, trailPoint.rotY, 0.18);
+          }
+        }
+
+        // Ayunan tangan & kaki
+        if (isMoving) {
+          const phase = playerState.walkCycle + idx * 1.2;
+          const legSwing = Math.sin(phase) * 0.45;
+          const armSwing = Math.cos(phase) * 0.5;
+          rig.leftLeg.rotation.x = legSwing;
+          rig.rightLeg.rotation.x = -legSwing;
+          rig.leftArm.rotation.x = -armSwing;
+          rig.rightArm.rotation.x = armSwing;
+        } else {
+          rig.leftLeg.rotation.x = THREE.MathUtils.lerp(rig.leftLeg.rotation.x, 0, 0.15);
+          rig.rightLeg.rotation.x = THREE.MathUtils.lerp(rig.rightLeg.rotation.x, 0, 0.15);
+          rig.leftArm.rotation.x = THREE.MathUtils.lerp(rig.leftArm.rotation.x, 0, 0.15);
+          rig.rightArm.rotation.x = THREE.MathUtils.lerp(rig.rightArm.rotation.x, 0, 0.15);
+        }
+
+        // Hadapkan Nameplate ke kamera
+        rig.npMesh.quaternion.copy(camera.quaternion);
+      });
+    }
+
+    function updateCamera() {
+      const camTargetX = playerGroup.position.x + Math.sin(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance;
+      const camTargetY = playerGroup.position.y + Math.sin(cameraOrbit.pitch) * cameraOrbit.distance + 2.2;
+      const camTargetZ = playerGroup.position.z + Math.cos(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance;
+
+      camera.position.lerp(new THREE.Vector3(camTargetX, camTargetY, camTargetZ), 0.12);
+      camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.8, playerGroup.position.z);
+    }
+
+    function checkProximity() {
+      if (isGamePaused || document.querySelector('.modal-overlay.active')) return;
+      const pPos = playerGroup.position;
+
+      // Cek Gulungan Kalimat Past Tense & Koin Bonus
+      for (let i = animatedCollectibles.length - 1; i >= 0; i--) {
+        const item = animatedCollectibles[i];
+        const dist = pPos.distanceTo(item.mesh.position);
+        if (dist < 2.2) {
+          scene.remove(item.mesh);
+          animatedCollectibles.splice(i, 1);
+
+          if (item.type === 'coin') {
+            audio.playCoin();
+            const curPlayer = gameState.players[gameState.activeTurnIndex];
+            awardPlayerPoints(gameState.activeTurnIndex, 5);
+            updatePartyFloatingLabels();
+            showToast(`🪙 Koin Emas! +5 Poin untuk ${curPlayer.name}!`);
+          } else if (item.type === 'scroll') {
+            audio.playLevelUp();
+            gameState.scrollsFound++;
+            saveState();
+            openScrollChallengeModal(item.challengeIdx);
+          }
+        }
+      }
+
+      // Cek Zona Gedung & NPC
+      nearestInteraction = null;
+      let minDist = Infinity;
+
+      interactiveZones.forEach(zone => {
+        const dist = pPos.distanceTo(zone.pos);
+        if (dist < zone.radius && dist < minDist) {
+          minDist = dist;
+          nearestInteraction = zone;
+        }
+      });
+
+      const prompt = document.getElementById('interact-prompt');
+      const promptText = document.getElementById('interact-text');
+
+      if (nearestInteraction) {
+        prompt.classList.add('show');
+        if (nearestInteraction.type === 'building') {
+          promptText.innerText = `Masuk ${nearestInteraction.name}`;
+        } else if (nearestInteraction.type === 'npc') {
+          promptText.innerText = `Bicara dengan ${nearestInteraction.name}`;
+        }
+      } else {
+        prompt.classList.remove('show');
+      }
+    }
+
+    function triggerCurrentInteraction() {
+      if (!nearestInteraction) return;
+      if (nearestInteraction.type === 'building') {
+        openBuildingModal(nearestInteraction.key);
+      } else if (nearestInteraction.type === 'npc') {
+        audio.playCoin();
+        showToast(`${nearestInteraction.name}: "${nearestInteraction.dialogue}"`, "💬");
+      }
+    }
+
+    /* =====================================================================
+       8. TANTANGAN GULUNGAN KALIMAT & KUIS POS 4 PEMAIN
+       ===================================================================== */
+    function openScrollChallengeModal(idx) {
+      // Reset input gerak
+      input.forward = 0; input.backward = 0; input.left = 0; input.right = 0;
+
+      const challenge = worldScrollChallenges[idx % worldScrollChallenges.length];
+      const activePlayer = gameState.players[gameState.activeTurnIndex];
+
+      document.getElementById('scroll-player-name').innerText = activePlayer.name;
+      document.getElementById('scroll-question').innerText = challenge.q;
+      document.getElementById('scroll-explanation').style.display = 'none';
+      document.getElementById('scroll-close-btn').style.display = 'none';
+
+      const optionsBox = document.getElementById('scroll-options');
+      optionsBox.innerHTML = '';
+
+      challenge.options.forEach((opt, oIdx) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.innerHTML = `<span style="font-weight:900; color:#FBBF24;">${String.fromCharCode(65 + oIdx)}.</span> ${opt}`;
+        btn.onclick = () => {
+          const allBtns = optionsBox.querySelectorAll('.answer-btn');
+          allBtns.forEach(b => b.disabled = true);
+
+          if (oIdx === challenge.answer) {
+            audio.playCorrect();
+            btn.classList.add('correct');
+            awardPlayerPoints(gameState.activeTurnIndex, 30);
+            updatePartyFloatingLabels();
+            showToast(`Benar! ${activePlayer.name} mendapat +30 Poin!`, "🎉");
+          } else {
+            audio.playWrong();
+            btn.classList.add('wrong');
+            allBtns[challenge.answer].classList.add('correct');
+            showToast(`Kurang tepat! Giliran berikutnya siap-siap ya.`, "💡");
+          }
+
+          document.getElementById('scroll-explanation-text').innerText = challenge.explain;
+          document.getElementById('scroll-explanation').style.display = 'block';
+          document.getElementById('scroll-close-btn').style.display = 'block';
+
+          // Otomatis geser giliran ke pemain berikutnya untuk gulungan selanjutnya
+          advanceTurn();
+        };
+        optionsBox.appendChild(btn);
+      });
+
+      document.getElementById('modal-scroll').classList.add('active');
+    }
+
+    // Kuis di dalam Pos Gedung (4 Soal = Masing-masing dari 4 pemain dapat 1 giliran adil)
+    let currentBuildingKey = null;
+    let quizSession = {
+      questions: [],
+      currentIndex: 0,
+      timer: 30,
+      timerInterval: null
+    };
+
+    function openBuildingModal(key) {
+      input.forward = 0; input.backward = 0; input.left = 0; input.right = 0;
+      currentBuildingKey = key;
+      const curData = gameState.curriculum[key];
+      if (!curData) return;
+
+      document.getElementById('building-modal-icon').innerText = curData.icon || "🏛️";
+      document.getElementById('building-modal-title').innerText = curData.title;
+      document.getElementById('materi-text').innerText = curData.materi;
+
+      switchBuildingTab('materi');
+      document.getElementById('modal-building').classList.add('active');
+    }
+
+    function switchBuildingTab(tab) {
+      const isMateri = tab === 'materi';
+      document.getElementById('tab-btn-materi').classList.toggle('active', isMateri);
+      document.getElementById('tab-btn-kuis').classList.toggle('active', !isMateri);
+      document.getElementById('tab-content-materi').style.display = isMateri ? 'block' : 'none';
+      document.getElementById('tab-content-kuis').style.display = !isMateri ? 'block' : 'none';
+      if (isMateri && quizSession.timerInterval) clearInterval(quizSession.timerInterval);
+    }
+
+    function startBuildingQuiz() {
+      switchBuildingTab('kuis');
+      const curData = gameState.curriculum[currentBuildingKey];
+      quizSession.questions = [...curData.quizzes];
+      quizSession.currentIndex = 0;
+
+      document.getElementById('quiz-summary').style.display = 'none';
+      document.getElementById('quiz-question').style.display = 'block';
+      document.getElementById('quiz-options').style.display = 'flex';
+      document.querySelector('.quiz-stats').style.display = 'flex';
+      document.getElementById('quiz-turn-indicator').style.display = 'flex';
+
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const qData = quizSession.questions[quizSession.currentIndex];
+      const activePlayer = gameState.players[gameState.activeTurnIndex];
+
+      document.getElementById('quiz-current-player-name').innerText = activePlayer.name;
+      document.getElementById('quiz-current-player-name').style.color = activePlayer.color;
+      document.getElementById('quiz-question-counter').innerText = `Soal ${quizSession.currentIndex + 1} / ${quizSession.questions.length}`;
+      document.getElementById('quiz-question').innerText = `${quizSession.currentIndex + 1}. ${qData.q}`;
+      document.getElementById('quiz-explanation').style.display = 'none';
+      document.getElementById('quiz-next-btn').style.display = 'none';
+
+      const optionsBox = document.getElementById('quiz-options');
+      optionsBox.innerHTML = '';
+
+      qData.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.innerHTML = `<span style="font-weight:900; color:#818cf8;">${String.fromCharCode(65 + idx)}.</span> ${opt}`;
+        btn.onclick = () => selectAnswer(idx);
+        optionsBox.appendChild(btn);
+      });
+
+      clearInterval(quizSession.timerInterval);
+      quizSession.timer = 30;
+      const timerEl = document.getElementById('quiz-timer');
+      timerEl.classList.remove('warning');
+      timerEl.innerText = `⏱️ ${quizSession.timer}s`;
+
+      quizSession.timerInterval = setInterval(() => {
+        quizSession.timer--;
+        timerEl.innerText = `⏱️ ${quizSession.timer}s`;
+        if (quizSession.timer <= 7) timerEl.classList.add('warning');
+        if (quizSession.timer <= 0) {
+          clearInterval(quizSession.timerInterval);
+          selectAnswer(-1);
+        }
+      }, 1000);
+    }
+
+    function selectAnswer(chosenIdx) {
+      clearInterval(quizSession.timerInterval);
+      const qData = quizSession.questions[quizSession.currentIndex];
+      const activePlayer = gameState.players[gameState.activeTurnIndex];
+
+      const buttons = document.querySelectorAll('#quiz-options .answer-btn');
+      buttons.forEach(btn => btn.disabled = true);
+
+      if (chosenIdx === qData.answer) {
+        audio.playCorrect();
+        if (buttons[chosenIdx]) buttons[chosenIdx].classList.add('correct');
+        awardPlayerPoints(gameState.activeTurnIndex, 25);
+        updatePartyFloatingLabels();
+        showToast(`Hebat ${activePlayer.name}! +25 Poin!`, "🌟");
+      } else {
+        audio.playWrong();
+        if (chosenIdx >= 0 && buttons[chosenIdx]) buttons[chosenIdx].classList.add('wrong');
+        if (buttons[qData.answer]) buttons[qData.answer].classList.add('correct');
+        showToast(`Belum tepat, tetap semangat ${activePlayer.name}!`, "💪");
+      }
+
+      document.getElementById('quiz-explanation-text').innerText = qData.explain;
+      document.getElementById('quiz-explanation').style.display = 'block';
+
+      // Pindahkan giliran ke teman berikutnya
+      advanceTurn();
+
+      const nextBtn = document.getElementById('quiz-next-btn');
+      nextBtn.style.display = 'block';
+      if (quizSession.currentIndex >= quizSession.questions.length - 1) {
+        nextBtn.innerText = "Lihat Hasil & Klasemen ➔";
+      } else {
+        const nextPlayer = gameState.players[gameState.activeTurnIndex];
+        nextBtn.innerText = `Lanjut Giliran ${nextPlayer.name} ➔`;
+      }
+    }
+
+    function nextQuestion() {
+      if (quizSession.currentIndex >= quizSession.questions.length - 1) {
+        finishQuiz();
+      } else {
+        quizSession.currentIndex++;
+        loadQuestion();
+      }
+    }
+
+    function finishQuiz() {
+      clearInterval(quizSession.timerInterval);
+      document.getElementById('quiz-question').style.display = 'none';
+      document.getElementById('quiz-options').style.display = 'none';
+      document.getElementById('quiz-explanation').style.display = 'none';
+      document.getElementById('quiz-next-btn').style.display = 'none';
+      document.querySelector('.quiz-stats').style.display = 'none';
+      document.getElementById('quiz-turn-indicator').style.display = 'none';
+
+      document.getElementById('quiz-summary').style.display = 'block';
+      audio.playLevelUp();
+    }
+
+    /* =====================================================================
+       9. LEADERBOARD PODIUM JUARA & HUD RENDER
+       ===================================================================== */
+    document.getElementById('btn-leaderboard').onclick = openLeaderboardModal;
+
+    function openLeaderboardModal() {
+      renderLeaderboardUI();
+      document.getElementById('modal-leaderboard').classList.add('active');
+    }
+
+    function renderLeaderboardUI() {
+      const sorted = [...gameState.players].sort((a, b) => b.score - a.score);
+      const champ = sorted[0];
+
+      document.getElementById('champion-name').innerText = `🏆 ${champ.name} (${champ.score} Poin)`;
+
+      // Urutan visual podium: Juara 2 (Kiri), Juara 1 (Tengah Tinggi), Juara 3 (Kanan), Juara 4 (Kanan ujung)
+      const podiumOrder = [sorted[1], sorted[0], sorted[2], sorted[3]];
+      const heights = ["105px", "145px", "80px", "60px"];
+      const medals = ["🥈", "🥇", "🥉", "🎖️"];
+
+      const podiumBox = document.getElementById('podium-box');
+      podiumBox.innerHTML = '';
+
+      podiumOrder.forEach((p, idx) => {
+        if (!p) return;
+        const col = document.createElement('div');
+        col.className = 'podium-col';
+        col.innerHTML = `
+          <div class="podium-name">${p.name}</div>
+          <div class="podium-score">${p.score} Poin</div>
+          <div class="podium-bar" style="height:${heights[idx]}; background:${p.color};">
+            ${medals[idx]}
+          </div>
+        `;
+        podiumBox.appendChild(col);
+      });
+
+      const listContainer = document.getElementById('leaderboard-list');
+      listContainer.innerHTML = '';
+      sorted.forEach((p, rankIdx) => {
+        const row = document.createElement('div');
+        row.className = 'rank-list-item';
+        row.innerHTML = `
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:18px; font-weight:900; color:#FBBF24;">#${rankIdx + 1}</span>
+            <span class="color-dot" style="background:${p.color};"></span>
+            <strong style="font-size:15px;">${p.name}</strong>
+            ${rankIdx === 0 ? '<span style="background:#F59E0B; color:#78350F; font-size:10px; font-weight:900; padding:2px 8px; border-radius:10px;">JUARA UTAMA</span>' : ''}
+          </div>
+          <div style="font-size:16px; font-weight:900; color:#34D399;">${p.score} Poin</div>
+        `;
+        listContainer.appendChild(row);
+      });
+    }
+
+    function updateHUD() {
+      const activeP = gameState.players[gameState.activeTurnIndex];
+      document.getElementById('hud-active-player').innerText = activeP.name;
+      document.getElementById('hud-scrolls').innerText = `${gameState.scrollsFound} / ${gameState.totalScrolls}`;
+
+      const grid = document.getElementById('hud-party-grid');
+      grid.innerHTML = '';
+      gameState.players.forEach((p, idx) => {
+        const card = document.createElement('div');
+        card.className = `party-member-card ${idx === gameState.activeTurnIndex ? 'active-turn' : ''}`;
+        card.title = "Klik untuk memilih giliran pemain ini";
+        card.onclick = () => selectActiveTurn(idx);
+        card.innerHTML = `
+          <div class="member-left">
+            <span class="member-avatar-dot" style="background:${p.color}"></span>
+            <span class="member-name">${p.name}</span>
+          </div>
+          <span class="member-score">${p.score} pts</span>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Wardrobe & Mode Guru
+    document.getElementById('btn-wardrobe').onclick = () => {
+      renderWardrobeUI();
+      document.getElementById('modal-wardrobe').classList.add('active');
+    };
+
+    function renderWardrobeUI() {
+      const container = document.getElementById('outfit-options');
+      container.innerHTML = '';
+      Object.keys(outfitPresets).forEach(key => {
+        const item = outfitPresets[key];
+        const card = document.createElement('div');
+        card.className = `wardrobe-item ${gameState.uniform === key ? 'active' : ''}`;
+        card.innerHTML = `
+          <div class="wardrobe-preview" style="background: #${item.shirt.toString(16).padStart(6, '0')}">${item.icon}</div>
+          <div class="wardrobe-label">${item.name}</div>
+        `;
+        card.onclick = () => applyOutfit(key);
+        container.appendChild(card);
+      });
+
+      const accContainer = document.getElementById('accessory-options');
+      accContainer.innerHTML = '';
+      [
+        { id: "none", name: "Tanpa Aksesoris", icon: "👤" },
+        { id: "cap", name: "Topi Petualang", icon: "🧢" },
+        { id: "glasses", name: "Kacamata Detektif", icon: "👓" }
+      ].forEach(a => {
+        const aCard = document.createElement('div');
+        aCard.className = `wardrobe-item ${gameState.accessory === a.id ? 'active' : ''}`;
+        aCard.innerHTML = `
+          <div class="wardrobe-preview" style="background: #334155">${a.icon}</div>
+          <div class="wardrobe-label">${a.name}</div>
+        `;
+        aCard.onclick = () => applyAccessory(a.id);
+        accContainer.appendChild(aCard);
+      });
+    }
+
+    document.getElementById('btn-teacher').onclick = () => {
+      document.getElementById('modal-teacher').classList.add('active');
+    };
+
+    function saveCustomQuestion() {
+      const mapel = document.getElementById('teacher-mapel').value;
+      const question = document.getElementById('teacher-q').value.trim();
+      const opt0 = document.getElementById('teacher-opt0').value.trim();
+      const opt1 = document.getElementById('teacher-opt1').value.trim();
+      const opt2 = document.getElementById('teacher-opt2').value.trim();
+      const opt3 = document.getElementById('teacher-opt3').value.trim();
+      const correct = parseInt(document.getElementById('teacher-correct').value);
+      const explain = document.getElementById('teacher-explain').value.trim();
+
+      if (!question || !opt0 || !opt1 || !opt2 || !opt3 || !explain) {
+        showToast("Mohon lengkapi seluruh kolom soal Past Tense!", "⚠️");
+        return;
+      }
+
+      gameState.curriculum[mapel].quizzes.push({
+        q: question,
+        options: [opt0, opt1, opt2, opt3],
+        answer: correct,
+        explain: explain
+      });
+      saveState();
+      audio.playCorrect();
+      showToast("Soal Past Tense baru berhasil ditambahkan!", "📚");
+      closeModal('modal-teacher');
+    }
+
+    function closeModal(modalId) {
+      if (modalId) {
+        document.getElementById(modalId).classList.remove('active');
+      } else {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+      }
+      if (quizSession.timerInterval) clearInterval(quizSession.timerInterval);
+    }
+
+    /* =====================================================================
+       10. MINIMAP RADAR & MAIN ANIMATION LOOP
+       ===================================================================== */
+    const radarCanvas = document.getElementById('radar-canvas');
+    const rCtx = radarCanvas.getContext('2d');
+
+    function updateMinimap() {
+      const w = radarCanvas.width, h = radarCanvas.height;
+      const cx = w / 2, cy = h / 2, mapScale = 0.44;
+      rCtx.clearRect(0, 0, w, h);
+
+      rCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      rCtx.beginPath(); rCtx.arc(cx, cy, cx - 2, 0, Math.PI * 2); rCtx.fill();
+
+      // Titik Gulungan Kalimat Kuning
+      animatedCollectibles.forEach(item => {
+        if (item.type === 'scroll') {
+          const sx = cx + (item.mesh.position.x - playerGroup.position.x) * mapScale;
+          const sz = cy + (item.mesh.position.z - playerGroup.position.z) * mapScale;
+          if (Math.hypot(sx - cx, sz - cy) < cx - 6) {
+            rCtx.fillStyle = '#FACC15';
+            rCtx.beginPath(); rCtx.arc(sx, sz, 3, 0, Math.PI * 2); rCtx.fill();
+          }
+        }
+      });
+
+      // Titik 5 Gedung Pos
+      buildingData.forEach(b => {
+        const bx = cx + (b.pos[0] - playerGroup.position.x) * mapScale;
+        const bz = cy + (b.pos[2] - playerGroup.position.z) * mapScale;
+        if (Math.hypot(bx - cx, bz - cy) < cx - 6) {
+          rCtx.fillStyle = b.hex;
+          rCtx.beginPath(); rCtx.arc(bx, bz, 5, 0, Math.PI * 2); rCtx.fill();
+        }
+      });
+
+      // Panah Posisi Tim
+      rCtx.save();
+      rCtx.translate(cx, cy);
+      rCtx.rotate(-playerGroup.rotation.y);
+      rCtx.fillStyle = '#38BDF8';
+      rCtx.beginPath();
+      rCtx.moveTo(0, -7); rCtx.lineTo(5, 5); rCtx.lineTo(0, 2); rCtx.lineTo(-5, 5);
+      rCtx.closePath(); rCtx.fill();
+      rCtx.restore();
+    }
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = Math.min(clock.getDelta(), 0.1);
+      const time = clock.getElapsedTime();
+
+      updatePlayerParty(delta);
+      updateCamera();
+      checkProximity();
+
+      animatedCollectibles.forEach((item, idx) => {
+        item.mesh.rotation.y += 2.0 * delta;
+        item.mesh.position.y = item.basePos.y + Math.sin(time * 3 + idx) * 0.25;
+      });
+
+      npcs.forEach((npc, idx) => {
+        npc.exMesh.rotation.y = time * 2;
+        npc.exMesh.position.y = 3.15 + Math.sin(time * 3 + idx) * 0.14;
+      });
+
+      fountainDrops.forEach(d => {
+        d.mesh.position.x += d.velX;
+        d.mesh.position.z += d.velZ;
+        d.mesh.position.y += d.velY;
+        d.velY -= 0.005;
+        if (d.mesh.position.y <= 1.25) {
+          d.mesh.position.set(0, d.startY, 0);
+          d.velY = 0.08 + Math.random() * 0.05;
+        }
+      });
+
+      updateMinimap();
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    window.onload = function () {
+      loadSavedState();
+      updatePartyFloatingLabels();
+      animate();
+    };
+  </script>
+</body>
+</html>
